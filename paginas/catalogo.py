@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from siap import catalogo
-from siap.ui import iniciar_pagina, rodape, transacao
+from siap.ui import executar, iniciar_pagina, rodape, transacao
 
 iniciar_pagina("Catálogo de testes")
 st.caption("Estar no catálogo não autoriza aplicação ou correção profissional: isso depende do SATEPSI.")
@@ -36,17 +36,6 @@ st.dataframe(
     hide_index=True, width="stretch",
 )
 st.caption(f"{len(filtradas)} de {len(linhas)} versões")
-
-
-def executar(acao, mensagem_ok: str) -> None:
-    try:
-        with transacao() as s:
-            acao(s)
-    except catalogo.ErroValidacao as erro:
-        st.error(str(erro))
-    else:
-        st.success(mensagem_ok)
-        st.rerun()
 
 
 # --------------------------------------------------------------- cadastro

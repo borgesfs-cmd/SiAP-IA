@@ -1,7 +1,11 @@
-# SIAP-IA — Documento Mestre v1.1
+# SIAP-IA — Documento Mestre v1.2
 
-**Versão 1.1 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.2 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.2 (Etapa 3)
+- Finalidades: Psicodiagnóstico e Avaliação neuropsicológica incluídas entre as padrão; **inclusão manual de outras finalidades**.
+- Liberação SATEPSI por finalidade; Etapa 3 implementada; migrações de banco com Alembic.
 
 ## O que mudou da v1.0 para a v1.1
 | Tema | v1.0 | v1.1 |
@@ -37,8 +41,8 @@ SIAP-IA: apoio ao trabalho de avaliação psicológica em psicodiagnóstico adul
 |---|---|---|
 | 1. Base | Repositório, app, banco, auditoria, testes, CI, implantação em nuvem | ✅ concluída |
 | 2. Catálogo + SATEPSI | Instrumentos/versões, verificação com evidência e validade, bloqueio, backup | ✅ concluída |
-| 3. Avaliações | Caso codificado, finalidade/contexto, entrevistas e observações, instrumentos aplicados (somente versões elegíveis para a finalidade), resultados registrados | próxima |
-| 4. Documentos | Laudo e atestado (Res. CFP 06/2019), relatório, declaração e parecer; rascunho → revisado → aprovado → emitido; exportação Word/PDF; hash | — |
+| 3. Avaliações | Finalidades (padrão + manuais), caso codificado, entrevistas e observações, instrumentos aplicados (somente versões elegíveis para a finalidade), resultados transcritos, alertas de conformidade | ✅ concluída |
+| 4. Documentos | Laudo e atestado (Res. CFP 06/2019), relatório, declaração e parecer; rascunho → revisado → aprovado → emitido; exportação Word/PDF; hash | próxima |
 | Pós-MVP A | Consultor IA metodológico e de redação; análise qualitativa (codificação, matrizes, evidências) | — |
 | Pós-MVP B | Dashboards | — |
 | Pós-MVP C | Estatística de pesquisa: descritivas, TCT, precisão, AFE/AFC, TRI, normas de estudos próprios | — |
@@ -60,7 +64,16 @@ SIAP-IA: apoio ao trabalho de avaliação psicológica em psicodiagnóstico adul
 - Verificações nunca são editadas ou apagadas. Corrigir significa registrar nova consulta.
 - O bloqueio não apaga dados nem altera documentos já emitidos. Situações anteriores exigem análise profissional.
 - Não se presume API pública do SATEPSI.
-- Etapa 3: a liberação passará a considerar também a finalidade da avaliação diante das condições registradas.
+- Cada verificação vale para **todas as finalidades** ou **somente as selecionadas** (ex.: listas normativas de trânsito ou porte de arma). Fora delas, a versão fica bloqueada para aquela finalidade.
+- A aplicação registrada guarda a situação SATEPSI e a verificação vigente no momento do registro.
+- Se uma versão perder a elegibilidade, as avaliações em andamento que a usaram recebem alerta no Panorama e na própria avaliação. Nada é apagado.
+
+## 6-A. Finalidades e avaliações (implementado)
+- Finalidades padrão: Psicodiagnóstico; Avaliação neuropsicológica; Trânsito (CNH); Porte/posse de arma de fogo; Seleção de pessoal; Treinamento e desenvolvimento de pessoal; Pesquisa. Você pode **incluir outras**, editar e desativar (sem apagar).
+- Avaliação: código automático AV-AAAA-NNN; finalidade; faixa etária; idade; escolaridade; contexto/solicitante; demanda; situação (em andamento / concluída / cancelada).
+- Registros: entrevista inicial, anamnese, entrevista, observação, contato com fonte complementar, devolutiva, outro. Edições guardam a versão anterior na auditoria.
+- Resultados: medida, escore bruto, escore padronizado, percentil, classificação e **referência obrigatória** (manual/tabela/plataforma). O sistema não calcula normas.
+- Privacidade: textos com padrão de CPF, e-mail ou telefone são recusados. Nomes próprios não são detectáveis automaticamente.
 
 ## 7. Documentação psicológica (Etapa 4)
 Fluxo: selecionar avaliação → reunir evidências pertinentes → rascunho → checagem de consistência e requisitos → revisão e aprovação profissional → exportar Word/PDF → arquivar com hash. Adequar à Resolução CFP 06/2019 e às normas vigentes, conferidas antes do uso real. Inclui o prazo de guarda documental exigido pelo CFP.
@@ -80,7 +93,7 @@ Fluxo: selecionar avaliação → reunir evidências pertinentes → rascunho �
 ## 9. Pendências
 - Usuário: conferir no SATEPSI cada versão do inventário e registrar no sistema.
 - Usuário: implantar seguindo `docs/IMPLANTACAO.md`.
-- Técnica: restauração de backup; Alembic antes da Etapa 3; extensão da regra para finalidade.
+- Técnica: restauração de backup.
 
 ## Referências
 SATEPSI: <https://satepsi.cfp.org.br/> · CFP: <https://site.cfp.org.br/> · LGPD: Lei nº 13.709/2018 (consultar texto oficial atualizado).

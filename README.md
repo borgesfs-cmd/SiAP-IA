@@ -2,9 +2,11 @@
 
 **Sistema Inteligente de Avaliação Psicológica** — uso pessoal e não comercial.
 
-Versão atual: **Etapas 1 e 2 do MVP**
+Versão atual: **Etapas 1, 2 e 3 do MVP**
+- **Avaliações:** caso identificado só por código (AV-AAAA-NNN), finalidade, perfil (faixa etária, idade, escolaridade), demanda, entrevistas/observações, instrumentos aplicados e resultados transcritos do manual. O sistema recusa textos com CPF, e-mail ou telefone.
+- **Finalidades:** Psicodiagnóstico, Avaliação neuropsicológica, Trânsito, Porte/posse de arma, Seleção, Treinamento e Pesquisa, além das que você incluir.
 - **Catálogo de testes:** cadastro, versões independentes (ex.: d2 e d2-R), busca e edição com histórico.
-- **Monitor SATEPSI (modo assistido):** você consulta o [site oficial](https://satepsi.cfp.org.br/) e registra a situação com evidência; o sistema bloqueia uso profissional de tudo que não estiver favorável **e** dentro da validade (padrão 90 dias).
+- **Monitor SATEPSI (modo assistido):** você consulta o [site oficial](https://satepsi.cfp.org.br/) e registra a situação com evidência; o sistema bloqueia uso profissional de tudo que não estiver favorável **e** dentro da validade (padrão 90 dias). A verificação pode valer para todas as finalidades ou só para algumas. Um teste bloqueado não pode ser registrado numa avaliação.
 - **Auditoria e backup:** toda alteração é registrada; backup integral em JSON.
 
 O inventário inicial (14 testes / 15 versões) entra como **não verificado**, portanto bloqueado.

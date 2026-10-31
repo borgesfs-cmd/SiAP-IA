@@ -8,7 +8,8 @@ from pathlib import Path
 from sqlalchemy import Engine, create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
-from .models import Base
+
+PASTA_MIGRACOES = Path(__file__).resolve().parent / "migracoes"
 
 SQLITE_PADRAO = "sqlite:///data/siap.db"
 
@@ -45,8 +46,26 @@ def criar_engine(url: str) -> Engine:
             conexao.execute("PRAGMA foreign_keys=ON")
     else:
         engine = create_engine(url, pool_pre_ping=True)
-    Base.metadata.create_all(engine)
+    migrar(engine)
     return engine
+
+
+def configuracao_alembic():
+    from alembic.config import Config
+
+    cfg = Config()
+    cfg.set_main_option("script_location", str(PASTA_MIGRACOES))
+    return cfg
+
+
+def migrar(engine: Engine) -> None:
+    """Atualiza o esquema do banco até a última migração (Alembic). Seguro de repetir."""
+    from alembic import command
+
+    cfg = configuracao_alembic()
+    with engine.begin() as conexao:
+        cfg.attributes["connection"] = conexao
+        command.upgrade(cfg, "head")
 
 
 def fabrica_sessoes(engine: Engine) -> sessionmaker[Session]:

@@ -3,7 +3,7 @@
 import pandas as pd
 import streamlit as st
 
-from siap import catalogo, satepsi
+from siap import catalogo, finalidades, satepsi
 from siap.ui import data_br, iniciar_pagina, rodape, selo, transacao
 
 iniciar_pagina("Verificação SATEPSI")
@@ -15,6 +15,7 @@ st.markdown(
 
 with transacao() as s:
     linhas = catalogo.listar_catalogo(s)
+    fins = {f.id: f.nome for f in finalidades.listar_finalidades(s, somente_ativas=True)}
 
 if not linhas:
     st.info("Catálogo vazio. Cadastre um teste primeiro.")
@@ -34,7 +35,9 @@ with transacao() as s:
     historico = [
         {
             "Nº": v.id, "Consulta": data_br(v.data_consulta), "Situação": satepsi.ROTULOS[v.status],
-            "Validade (dias)": v.validade_dias, "Fonte": v.fonte, "Condições": v.condicoes,
+            "Validade (dias)": v.validade_dias,
+            "Finalidades": "Todas" if v.abrange_todas_finalidades else ", ".join(f.nome for f in v.finalidades),
+            "Fonte": v.fonte, "Condições": v.condicoes,
             "Observações": v.observacoes, "Evidência": v.evidencia_nome or "—",
             "SHA-256": (v.evidencia_sha256 or "")[:12], "Registrado em": data_br(v.registrado_em),
         }
@@ -57,7 +60,11 @@ with st.form("nova_verificacao", clear_on_submit=True):
     validade = c3.number_input("Revalidar após (dias)", 1, satepsi.VALIDADE_MAXIMA_DIAS,
                                satepsi.VALIDADE_PADRAO_DIAS)
     fonte = st.text_input("Fonte", satepsi.FONTE_PADRAO)
-    condicoes = st.text_area("Condições/restrições informadas (finalidade, população, modalidade…)")
+    abrangencia = st.radio("Válida para", ["Todas as finalidades", "Somente as finalidades selecionadas"],
+                           horizontal=True)
+    selecionadas = st.multiselect("Finalidades cobertas (se “somente as selecionadas”)", list(fins),
+                                  format_func=fins.get, placeholder="Selecione")
+    condicoes = st.text_area("Condições/restrições informadas (população, modalidade, normas específicas…)")
     observacoes = st.text_area("Observações")
     arquivo = st.file_uploader("Evidência (PNG, JPG ou PDF, até 5 MB) — obrigatória para favorável",
                                type=["png", "jpg", "jpeg", "pdf"])
@@ -70,6 +77,8 @@ with st.form("nova_verificacao", clear_on_submit=True):
                     evidencia_nome=arquivo.name if arquivo else None,
                     evidencia_tipo=arquivo.type if arquivo else None,
                     evidencia=arquivo.getvalue() if arquivo else None,
+                    abrange_todas_finalidades=abrangencia == "Todas as finalidades",
+                    finalidades_ids=selecionadas,
                 )
         except catalogo.ErroValidacao as erro:
             st.error(str(erro))

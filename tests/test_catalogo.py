@@ -171,7 +171,7 @@ def test_backup_contem_tudo(fabrica):
         dados = catalogo.exportar_backup(s)
     json.dumps(dados)  # serializável
     assert len(dados["instrumentos"]) == 1 and len(dados["versoes_instrumento"]) == 2
-    assert base64.b64decode(dados["verificacoes_satepsi"][0]["evidencia_base64"]) == PNG
+    assert base64.b64decode(dados["verificacoes_satepsi"][0]["evidencia"]["base64"]) == PNG
     assert dados["auditoria"]
 
 

@@ -25,21 +25,27 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
 |---|---|---|
 | 1. Base | ✅ | Streamlit, SQLAlchemy (SQLite local / PostgreSQL na nuvem), auditoria, testes, CI |
 | 2. Catálogo + SATEPSI | ✅ | Instrumentos, versões, verificação assistida com evidência e validade, bloqueio |
-| 3. Avaliações | próxima | Caso codificado, finalidade/contexto, instrumentos aplicados (só versões elegíveis), resultados registrados |
-| 4. Documentos | depois | Laudo e atestado (Res. CFP 06/2019) via modelos `.docx` (docxtpl), fluxo rascunho→revisado→aprovado→emitido, hash |
+| 3. Avaliações | ✅ | Finalidades (padrão + manuais), caso codificado, entrevistas/observações, instrumentos aplicados (só versões elegíveis **para a finalidade**), resultados transcritos, alertas |
+| 4. Documentos | próxima | Laudo e atestado (Res. CFP 06/2019) via modelos `.docx` (docxtpl), fluxo rascunho→revisado→aprovado→emitido, hash |
 
 Pós-MVP: consultor IA (API do Claude, texto pseudonimizado) e análise qualitativa → dashboards →
 estatística de pesquisa (TCT, AFE/AFC, TRI; depois R via `Rscript`).
 **Fora do escopo por decisão do usuário:** aprendizado de máquina; funcionalidades comerciais.
 
-Na Etapa 3, estender `pode_uso_profissional` para considerar a **finalidade** (trânsito, porte de arma,
-clínica…) contra as condições registradas, mantendo-a como porta única.
+Finalidades: padrões (Psicodiagnóstico, Avaliação neuropsicológica, Trânsito, Porte/posse de arma, Seleção,
+Treinamento e desenvolvimento, Pesquisa) + incluídas pelo usuário. Nunca apagar: só desativar.
+Uma verificação SATEPSI vale para todas as finalidades ou só para as selecionadas; `pode_uso_profissional(...,
+finalidade_id=...)` aplica isso. A finalidade de uma avaliação não muda depois de haver instrumento registrado.
+Avaliação concluída/cancelada é somente leitura até ser reaberta.
 
 ## Estrutura
 - `app.py` — entrada: senha (`APP_PASSWORD`) e navegação.
 - `paginas/` — telas Streamlit (sem regra de negócio).
-- `siap/models.py` — tabelas; `siap/satepsi.py` — regra pura; `siap/catalogo.py` — serviços + auditoria + backup;
-  `siap/inventario.py` — inventário inicial; `siap/db.py` — conexão; `siap/ui.py` — utilidades de tela.
+- `siap/models.py` — tabelas; `siap/satepsi.py` — regra pura; `siap/catalogo.py` — catálogo, SATEPSI, auditoria, backup;
+  `siap/finalidades.py`; `siap/avaliacoes.py` — avaliações + filtro de identificadores (CPF/e-mail/telefone);
+  `siap/inventario.py` — inventário inicial; `siap/db.py` — conexão + migrações; `siap/ui.py` — utilidades de tela
+  (`executar` para ações de formulário).
+- `siap/migracoes/` — Alembic. Aplicadas automaticamente ao abrir o app.
 - `tests/` — pytest (regras, serviços, persistência, páginas via `streamlit.testing`).
 
 ## Comandos
@@ -49,7 +55,8 @@ pytest -q
 streamlit run app.py
 ```
 Banco: `DATABASE_URL` (env ou secrets do Streamlit); sem ela, SQLite em `data/siap.db`.
-O esquema é criado por `create_all`; ao alterar tabelas existentes, introduzir Alembic antes.
+**Mudou um modelo?** Gere a migração com `python scripts/nova_migracao.py "descrição"`, revise o arquivo e rode
+`pytest` (`tests/test_migracoes.py` falha se modelos e migrações divergirem). Nunca edite migração já publicada.
 
 ## Convenções
 - Interface, mensagens, nomes de domínio e documentação em **português**.

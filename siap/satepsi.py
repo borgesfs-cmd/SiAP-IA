@@ -9,6 +9,7 @@ Política (Documento Mestre, seção 6):
 - Restrito / em avaliação / não localizado bloqueado (preventivo)
 - Favorável, mas verificação vencida .... bloqueado até nova consulta
 - Favorável e dentro da validade ........ elegível (respeitadas as condições registradas)
+- Favorável, mas restrito a outras finalidades que não a da avaliação ⇒ bloqueado para ela
 """
 
 from __future__ import annotations
@@ -83,7 +84,11 @@ def verificacao_vigente(verificacoes: Iterable[VerificacaoLike]) -> VerificacaoL
     return max(lista, key=lambda v: (v.data_consulta, v.id or 0))
 
 
-def avaliar(verificacoes: Iterable[VerificacaoLike], hoje: date) -> Situacao:
+def avaliar(
+    verificacoes: Iterable[VerificacaoLike], hoje: date,
+    finalidade_id: int | None = None, finalidade_nome: str = "",
+) -> Situacao:
+    """Situação da versão em `hoje`. Com `finalidade_id`, verifica também se a finalidade é coberta."""
     v = verificacao_vigente(verificacoes)
     if v is None:
         return Situacao(
@@ -109,6 +114,14 @@ def avaliar(verificacoes: Iterable[VerificacaoLike], hoje: date) -> Situacao:
             status=FAVORAVEL, liberado=False, vencida=True,
             motivo=f"Verificação vencida em {vence_em:%d/%m/%Y}: consulte novamente o SATEPSI.",
             **base,
+        )
+
+    permitidas = getattr(v, "finalidades_ids", None)
+    if finalidade_id is not None and permitidas is not None and finalidade_id not in permitidas:
+        alvo = f"“{finalidade_nome}”" if finalidade_nome else "esta finalidade"
+        return Situacao(
+            status=FAVORAVEL, liberado=False,
+            motivo=f"Favorável, mas a verificação vigente não cobre a finalidade {alvo}.", **base,
         )
 
     motivo = f"Favorável na consulta de {v.data_consulta:%d/%m/%Y}; válida até {vence_em:%d/%m/%Y}."

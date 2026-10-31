@@ -16,7 +16,14 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload, undefer
 
 from . import satepsi
-from .models import Instrumento, RegistroAuditoria, VerificacaoSATEPSI, VersaoInstrumento
+from .models import (
+    Base,
+    Finalidade,
+    Instrumento,
+    RegistroAuditoria,
+    VerificacaoSATEPSI,
+    VersaoInstrumento,
+)
 
 FUSO = ZoneInfo("America/Sao_Paulo")
 
@@ -153,9 +160,13 @@ def registrar_verificacao(
     fonte: str = satepsi.FONTE_PADRAO, validade_dias: int = satepsi.VALIDADE_PADRAO_DIAS,
     condicoes: str = "", observacoes: str = "", evidencia_nome: str | None = None,
     evidencia_tipo: str | None = None, evidencia: bytes | None = None,
+    abrange_todas_finalidades: bool = True, finalidades_ids: list[int] | None = None,
     referencia: date | None = None,
 ) -> VerificacaoSATEPSI:
-    """Registra uma nova consulta ao SATEPSI (nunca altera as anteriores)."""
+    """Registra uma nova consulta ao SATEPSI (nunca altera as anteriores).
+
+    `abrange_todas_finalidades=False` restringe a validade às finalidades em `finalidades_ids`.
+    """
     referencia = referencia or hoje()
     versao = s.get(VersaoInstrumento, versao_id)
     if versao is None:
@@ -183,31 +194,56 @@ def registrar_verificacao(
             "(captura de tela ou PDF da página do SATEPSI)."
         )
 
+    finalidades: list[Finalidade] = []
+    if not abrange_todas_finalidades:
+        ids = sorted(set(finalidades_ids or []))
+        if not ids:
+            raise ErroValidacao("Selecione ao menos uma finalidade ou marque “todas as finalidades”.")
+        finalidades = list(s.scalars(select(Finalidade).where(Finalidade.id.in_(ids))))
+        if len(finalidades) != len(ids):
+            raise ErroValidacao("Finalidade inexistente na seleção.")
+
     verificacao = VerificacaoSATEPSI(
         versao=versao, status=status, data_consulta=data_consulta,
         validade_dias=int(validade_dias), fonte=fonte, condicoes=_txt(condicoes),
         observacoes=_txt(observacoes), evidencia_nome=evidencia_nome if evidencia else None,
         evidencia_tipo=evidencia_tipo if evidencia else None, evidencia_sha256=sha,
         evidencia=evidencia or None,
+        abrange_todas_finalidades=abrange_todas_finalidades, finalidades=finalidades,
     )
     s.add(verificacao)
     s.flush()
     auditar(s, "registrar_verificacao_satepsi", "verificacao", verificacao.id,
             versao=versao.rotulo, status=status, data_consulta=data_consulta.isoformat(),
-            validade_dias=int(validade_dias), evidencia_sha256=sha)
+            validade_dias=int(validade_dias), evidencia_sha256=sha,
+            finalidades="todas" if abrange_todas_finalidades else [f.nome for f in finalidades])
     return verificacao
 
 
-def situacao_versao(versao: VersaoInstrumento, referencia: date | None = None) -> satepsi.Situacao:
-    return satepsi.avaliar(versao.verificacoes, referencia or hoje())
+def situacao_versao(
+    versao: VersaoInstrumento, referencia: date | None = None, finalidade: Finalidade | None = None,
+) -> satepsi.Situacao:
+    return satepsi.avaliar(
+        versao.verificacoes, referencia or hoje(),
+        finalidade_id=finalidade.id if finalidade else None,
+        finalidade_nome=finalidade.nome if finalidade else "",
+    )
 
 
-def pode_uso_profissional(s: Session, versao_id: int, referencia: date | None = None) -> satepsi.Situacao:
-    """Porta única de liberação para aplicação/correção profissional."""
+def pode_uso_profissional(
+    s: Session, versao_id: int, referencia: date | None = None, finalidade_id: int | None = None,
+) -> satepsi.Situacao:
+    """PORTA ÚNICA de liberação para aplicação/correção profissional.
+
+    Com `finalidade_id`, considera também as finalidades cobertas pela verificação vigente.
+    """
     versao = s.get(VersaoInstrumento, versao_id)
     if versao is None:
         raise ErroValidacao("Versão não encontrada.")
-    return situacao_versao(versao, referencia)
+    finalidade = s.get(Finalidade, finalidade_id) if finalidade_id is not None else None
+    if finalidade_id is not None and finalidade is None:
+        raise ErroValidacao("Finalidade não encontrada.")
+    return situacao_versao(versao, referencia, finalidade)
 
 
 # ------------------------------------------------------------------ consultas
@@ -264,24 +300,21 @@ def carregar_evidencia(s: Session, verificacao_id: int) -> VerificacaoSATEPSI | 
 # --------------------------------------------------------------------- backup
 
 def exportar_backup(s: Session) -> dict:
-    """Cópia integral em JSON (evidências em base64). Guarde o arquivo em local seguro."""
-    def linha(obj, excluir=()):
-        return {c.name: getattr(obj, c.key) for c in obj.__table__.columns if c.name not in excluir}
-
-    verificacoes = []
-    for v in s.scalars(select(VerificacaoSATEPSI).options(undefer(VerificacaoSATEPSI.evidencia))
-                       .order_by(VerificacaoSATEPSI.id)):
-        d = linha(v, excluir=("evidencia",))
-        d["evidencia_base64"] = base64.b64encode(v.evidencia).decode() if v.evidencia else None
-        verificacoes.append(d)
-
-    dados = {
+    """Cópia integral em JSON de todas as tabelas (binários em base64). Guarde em local seguro."""
+    dados: dict = {
         "formato": "siap-ia-backup",
-        "versao_formato": 1,
+        "versao_formato": 2,
         "gerado_em": datetime.now(FUSO).isoformat(),
-        "instrumentos": [linha(i) for i in s.scalars(select(Instrumento).order_by(Instrumento.id))],
-        "versoes_instrumento": [linha(v) for v in s.scalars(select(VersaoInstrumento).order_by(VersaoInstrumento.id))],
-        "verificacoes_satepsi": verificacoes,
-        "auditoria": [linha(a) for a in s.scalars(select(RegistroAuditoria).order_by(RegistroAuditoria.id))],
     }
+    for tabela in Base.metadata.sorted_tables:
+        linhas = []
+        for registro in s.execute(select(tabela).order_by(*tabela.primary_key.columns)).mappings():
+            linha = {}
+            for coluna, valor in registro.items():
+                if isinstance(valor, (bytes, bytearray, memoryview)):
+                    linha[coluna] = {"base64": base64.b64encode(bytes(valor)).decode()}
+                else:
+                    linha[coluna] = valor
+            linhas.append(linha)
+        dados[tabela.name] = linhas
     return json.loads(json.dumps(dados, ensure_ascii=False, default=str))

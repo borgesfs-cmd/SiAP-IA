@@ -9,8 +9,9 @@ from datetime import datetime, timezone
 import streamlit as st
 
 from . import satepsi
-from .catalogo import FUSO
+from .catalogo import FUSO, ErroValidacao
 from .db import criar_engine, database_url, fabrica_sessoes
+from .finalidades import carregar_finalidades_padrao
 from .inventario import carregar_inventario_inicial
 
 AVISO = (
@@ -41,6 +42,7 @@ def _fabrica(url: str):
     engine = criar_engine(url)
     fabrica = fabrica_sessoes(engine)
     with fabrica.begin() as s:
+        carregar_finalidades_padrao(s)
         carregar_inventario_inicial(s)
     return fabrica
 
@@ -55,6 +57,23 @@ def transacao():
 def iniciar_pagina(titulo: str) -> None:
     exigir_acesso()  # redundante com app.py, mas protege caso a página seja aberta isoladamente
     st.title(titulo)
+    mensagem = st.session_state.pop("_mensagem_ok", None)
+    if mensagem:
+        st.success(mensagem)
+
+
+def executar(acao, mensagem_ok: str, ao_concluir=None) -> None:
+    """Executa `acao(sessao)` numa transação. Erro de validação → mensagem; sucesso → recarrega a página."""
+    try:
+        with transacao() as s:
+            resultado = acao(s)
+            if ao_concluir is not None:
+                ao_concluir(resultado)
+    except ErroValidacao as erro:
+        st.error(str(erro))
+        return
+    st.session_state["_mensagem_ok"] = mensagem_ok
+    st.rerun()
 
 
 def data_br(valor) -> str:

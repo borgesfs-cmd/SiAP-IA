@@ -5,12 +5,15 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 
 from sqlalchemy import (
+    Boolean,
+    Column,
     Date,
     DateTime,
     ForeignKey,
     Integer,
     LargeBinary,
     String,
+    Table,
     Text,
     UniqueConstraint,
 )
@@ -23,6 +26,27 @@ def agora_utc() -> datetime:
 
 class Base(DeclarativeBase):
     pass
+
+
+verificacao_finalidades = Table(
+    "verificacao_finalidades",
+    Base.metadata,
+    Column("verificacao_id", ForeignKey("verificacoes_satepsi.id"), primary_key=True),
+    Column("finalidade_id", ForeignKey("finalidades.id"), primary_key=True),
+)
+
+
+class Finalidade(Base):
+    """Finalidade da avaliação (padrões + cadastradas pelo usuário). Nunca apagada: só desativada."""
+
+    __tablename__ = "finalidades"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    descricao: Mapped[str] = mapped_column(Text, default="")
+    ativa: Mapped[bool] = mapped_column(Boolean, default=True)
+    padrao: Mapped[bool] = mapped_column(Boolean, default=False)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
 
 
 class Instrumento(Base):
@@ -91,7 +115,18 @@ class VerificacaoSATEPSI(Base):
     evidencia: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True, deferred=True)
     registrado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
 
+    # Vazio = válida para todas as finalidades; preenchido = somente as listadas.
+    abrange_todas_finalidades: Mapped[bool] = mapped_column(Boolean, default=True)
+
     versao: Mapped[VersaoInstrumento] = relationship(back_populates="verificacoes")
+    finalidades: Mapped[list[Finalidade]] = relationship(secondary=verificacao_finalidades)
+
+    @property
+    def finalidades_ids(self) -> frozenset[int] | None:
+        """None = todas as finalidades."""
+        if self.abrange_todas_finalidades:
+            return None
+        return frozenset(f.id for f in self.finalidades)
 
 
 class RegistroAuditoria(Base):
@@ -105,3 +140,91 @@ class RegistroAuditoria(Base):
     entidade: Mapped[str] = mapped_column(String(60))
     entidade_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
     detalhes: Mapped[str] = mapped_column(Text, default="{}")
+
+
+class Avaliacao(Base):
+    """Processo de avaliação psicológica. Identificado SOMENTE por código (sem nome/CPF/contato)."""
+
+    __tablename__ = "avaliacoes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    codigo: Mapped[str] = mapped_column(String(30), unique=True)
+    finalidade_id: Mapped[int] = mapped_column(ForeignKey("finalidades.id"))
+    faixa_etaria: Mapped[str] = mapped_column(String(30))
+    idade: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    escolaridade: Mapped[str] = mapped_column(String(60), default="")
+    contexto: Mapped[str] = mapped_column(String(200), default="")
+    demanda: Mapped[str] = mapped_column(Text, default="")
+    status: Mapped[str] = mapped_column(String(20), default="em_andamento")
+    data_inicio: Mapped[date] = mapped_column(Date)
+    data_conclusao: Mapped[date | None] = mapped_column(Date, nullable=True)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+
+    finalidade: Mapped[Finalidade] = relationship()
+    registros: Mapped[list[RegistroAvaliacao]] = relationship(
+        back_populates="avaliacao", order_by="RegistroAvaliacao.data, RegistroAvaliacao.id"
+    )
+    aplicacoes: Mapped[list[AplicacaoInstrumento]] = relationship(
+        back_populates="avaliacao", order_by="AplicacaoInstrumento.data_aplicacao, AplicacaoInstrumento.id"
+    )
+
+
+class RegistroAvaliacao(Base):
+    """Entrevista, anamnese, observação, devolutiva etc."""
+
+    __tablename__ = "registros_avaliacao"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    avaliacao_id: Mapped[int] = mapped_column(ForeignKey("avaliacoes.id"))
+    data: Mapped[date] = mapped_column(Date)
+    tipo: Mapped[str] = mapped_column(String(40))
+    conteudo: Mapped[str] = mapped_column(Text)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+    editado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    avaliacao: Mapped[Avaliacao] = relationship(back_populates="registros")
+
+
+class AplicacaoInstrumento(Base):
+    """Uso profissional de uma versão de teste numa avaliação. Só é criada se a versão estiver elegível."""
+
+    __tablename__ = "aplicacoes_instrumento"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    avaliacao_id: Mapped[int] = mapped_column(ForeignKey("avaliacoes.id"))
+    versao_id: Mapped[int] = mapped_column(ForeignKey("versoes_instrumento.id"))
+    data_aplicacao: Mapped[date] = mapped_column(Date)
+    modalidade: Mapped[str] = mapped_column(String(40), default="")
+    observacoes: Mapped[str] = mapped_column(Text, default="")
+    # Fotografia da conformidade no momento do registro (para rastreabilidade).
+    satepsi_status_no_registro: Mapped[str] = mapped_column(String(20))
+    satepsi_motivo_no_registro: Mapped[str] = mapped_column(Text)
+    verificacao_id_no_registro: Mapped[int | None] = mapped_column(
+        ForeignKey("verificacoes_satepsi.id"), nullable=True
+    )
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+
+    avaliacao: Mapped[Avaliacao] = relationship(back_populates="aplicacoes")
+    versao: Mapped[VersaoInstrumento] = relationship()
+    resultados: Mapped[list[ResultadoRegistrado]] = relationship(
+        back_populates="aplicacao", order_by="ResultadoRegistrado.id"
+    )
+
+
+class ResultadoRegistrado(Base):
+    """Resultado transcrito do manual/plataforma oficial. O sistema NÃO calcula normas protegidas."""
+
+    __tablename__ = "resultados_registrados"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    aplicacao_id: Mapped[int] = mapped_column(ForeignKey("aplicacoes_instrumento.id"))
+    medida: Mapped[str] = mapped_column(String(200))
+    escore_bruto: Mapped[str] = mapped_column(String(40), default="")
+    escore_padrao: Mapped[str] = mapped_column(String(40), default="")
+    percentil: Mapped[str] = mapped_column(String(40), default="")
+    classificacao: Mapped[str] = mapped_column(String(120), default="")
+    referencia: Mapped[str] = mapped_column(String(300), default="")
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+    editado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    aplicacao: Mapped[AplicacaoInstrumento] = relationship(back_populates="resultados")

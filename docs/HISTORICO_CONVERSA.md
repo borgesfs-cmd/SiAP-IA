@@ -95,3 +95,7 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 - Computador Mac antigo, sem operação local ⇒ **execução na nuvem** (Streamlit Community Cloud + PostgreSQL Neon).
 
 **Entrega:** repositório `siap-ia` com Etapas 1 e 2 (base, catálogo, Monitor SATEPSI, auditoria, backup, testes e CI).
+
+## 14. Etapa 3 (31/10/2026)
+**Usuário:** pediu incluir **Psicodiagnóstico** e **Avaliação neuropsicológica** entre as finalidades, permitir **incluir outras finalidades manualmente** e seguir para a Etapa 3.
+**Entrega:** finalidades (padrão + manuais, desativáveis), verificação SATEPSI por finalidade, avaliações codificadas, entrevistas/observações, instrumentos aplicados com bloqueio por finalidade, resultados transcritos com referência, alertas de conformidade, filtro de identificadores e migrações Alembic.
