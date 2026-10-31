@@ -109,3 +109,7 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 ## 16. Pós-MVP A (31/10/2026)
 **Usuário:** "vamos aos próximos passos".
 **Entrega:** Consultor IA (consultor metodológico, revisão de redação de documentos, sugestão de códigos), com consentimento, pseudonimização, filtro de instrumentos elegíveis, validação de trechos literais e alerta de números novos; Análise qualitativa (livro de códigos, codificação, matriz, evidências). Migração 0003.
+
+## 17. Chave da API e Painéis (31/10/2026)
+**Usuário:** pediu que a chave da API pudesse ser colada no próprio sistema, numa aba fácil e intuitiva, e seguir para a próxima fase.
+**Entrega:** aba 🔑 Chave da API (colar → testar → salvar cifrada; remover; nunca exibida inteira, fora do backup); Painéis (visão geral, avaliação individual, comparativo). Migração 0004.

@@ -307,6 +307,8 @@ def exportar_backup(s: Session) -> dict:
         "gerado_em": datetime.now(FUSO).isoformat(),
     }
     for tabela in Base.metadata.sorted_tables:
+        if tabela.name == "segredos_cifrados":  # chaves de API nunca vão para o backup
+            continue
         linhas = []
         for registro in s.execute(select(tabela).order_by(*tabela.primary_key.columns)).mappings():
             linha = {}

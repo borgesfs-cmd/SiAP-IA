@@ -35,7 +35,16 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
 
 | A. Consultor IA + qualitativa | ✅ | Consultor metodológico, revisão de redação, sugestão de códigos (API do Claude, `claude-opus-5-5`, structured outputs, fallback de recusa); livro de códigos, codificação de trechos literais, matriz e evidências |
 
-Próximos: dashboards → estatística de pesquisa (TCT, AFE/AFC, TRI; depois R via `Rscript`).
+| B. Painéis | ✅ | Visão geral (contagens, mês, finalidade, instrumentos, SATEPSI, vencimentos), avaliação individual (percentis transcritos + linha do tempo), comparativo entre avaliações; Altair, cor única, tabela em cada gráfico |
+
+Próximo: estatística de pesquisa (descritivas, alfa/ômega, AFE/AFC, TRI; depois R via `Rscript`).
+
+**Chave da API (`siap/segredos.py`, aba 🔑):** a usuária cola a chave; ela é testada (`models.retrieve`, sem custo),
+cifrada com Fernet + scrypt sobre `APP_PASSWORD` (ou `SIAP_CHAVE_MESTRA`) e guardada em `segredos_cifrados`.
+Nunca exibir inteira, nunca pôr em backup/auditoria/logs. `ANTHROPIC_API_KEY` nos Secrets tem prioridade.
+**Painéis (`siap/paineis.py`):** só contagens e valores transcritos; percentil entra no gráfico apenas se o texto for
+número simples 0–100 (`percentil_numerico`). Referência visual com `mark_tick` (o tema do Streamlit oculta
+`mark_rule` em camadas).
 
 **Consultor IA (`siap/ia.py`):** desligado até consentimento (perfil.ia_habilitada) + `ANTHROPIC_API_KEY` nos Secrets.
 Todo envio passa por `ia.pseudonimizar` (nome→[PESSOA AVALIADA], código→[CASO], CPF/e-mail/telefone→[REMOVIDO]).
@@ -57,7 +66,8 @@ Avaliação concluída/cancelada é somente leitura até ser reaberta.
 - `siap/models.py` — tabelas; `siap/satepsi.py` — regra pura; `siap/catalogo.py` — catálogo, SATEPSI, auditoria, backup;
   `siap/finalidades.py`; `siap/avaliacoes.py` — avaliações + filtro de identificadores (CPF/e-mail/telefone);
   `siap/documentos.py` — documentos e fluxo; `siap/exportar_docx.py` — geração do Word;
-  `siap/ia.py` — consultor IA; `siap/qualitativo.py` — análise qualitativa;
+  `siap/ia.py` — consultor IA; `siap/segredos.py` — chave da API cifrada; `siap/qualitativo.py` — análise qualitativa;
+  `siap/paineis.py` — agregações dos painéis;
   `siap/inventario.py` — inventário inicial; `siap/db.py` — conexão + migrações; `siap/ui.py` — utilidades de tela
   (`executar` para ações de formulário).
 - `siap/migracoes/` — Alembic. Aplicadas automaticamente ao abrir o app.

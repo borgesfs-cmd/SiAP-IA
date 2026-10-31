@@ -318,3 +318,16 @@ class Codificacao(Base):
 
     registro: Mapped[RegistroAvaliacao] = relationship()
     codigo: Mapped[CodigoQualitativo] = relationship()
+
+
+class SegredoCifrado(Base):
+    """Segredos digitados no próprio app (ex.: chave da API do Claude), cifrados com chave derivada de
+    APP_PASSWORD. Nunca entram no backup, na auditoria nem na tela (só a forma mascarada)."""
+
+    __tablename__ = "segredos_cifrados"
+
+    nome: Mapped[str] = mapped_column(String(60), primary_key=True)
+    cifrado: Mapped[str] = mapped_column(Text)
+    sal: Mapped[str] = mapped_column(String(64))
+    final: Mapped[str] = mapped_column(String(8), default="")  # últimos caracteres, para exibir mascarado
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)

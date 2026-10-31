@@ -21,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from .catalogo import ErroValidacao, auditar
 from .documentos import TOKEN_NOME, obter_perfil
+from . import segredos
 from .models import agora_utc
 
 MODELO = "claude-opus-5-5"
@@ -96,7 +97,7 @@ def numeros_novos(saida: str, *entradas: str) -> list[str]:
     return novos
 
 
-def chave_api() -> str | None:
+def chave_dos_secrets() -> str | None:
     chave = os.environ.get("ANTHROPIC_API_KEY")
     if chave:
         return chave
@@ -108,15 +109,37 @@ def chave_api() -> str | None:
         return None
 
 
+def chave_api(s: Session) -> str | None:
+    """Ordem: Secrets/ambiente → chave colada na aba “Chave da API” (cifrada no banco)."""
+    return chave_dos_secrets() or segredos.ler(s, segredos.CHAVE_ANTHROPIC)
+
+
 def situacao(s: Session) -> tuple[bool, str]:
     """(disponível, motivo)."""
     perfil = obter_perfil(s)
     if not perfil.ia_habilitada:
         return False, "O consultor IA está desligado. Ative-o na página Consultor IA, após ler o termo."
-    if not chave_api():
-        return False, ("Falta a chave da API do Claude: adicione ANTHROPIC_API_KEY nos Secrets do Streamlit "
-                       "(Manage app → Settings → Secrets).")
+    if not chave_api(s):
+        return False, "Falta a chave da API do Claude: cole-a na aba 🔑 Chave da API."
     return True, ""
+
+
+def testar_chave(chave: str, cliente=None) -> str:
+    """Confere a chave consultando o modelo usado (sem gerar texto nem custo de tokens)."""
+    import anthropic
+
+    cliente = cliente or anthropic.Anthropic(api_key=chave, max_retries=1, timeout=30.0)
+    try:
+        modelo = cliente.models.retrieve(MODELO)
+    except anthropic.AuthenticationError:
+        raise ErroIA("A chave foi recusada pela Anthropic. Confira se copiou a chave inteira.")
+    except anthropic.PermissionDeniedError:
+        raise ErroIA("A chave não tem permissão para usar o modelo. Verifique a conta na Anthropic.")
+    except anthropic.APIConnectionError:
+        raise ErroIA("Sem conexão com a Anthropic para testar a chave. Tente novamente.")
+    except anthropic.APIStatusError as e:
+        raise ErroIA(f"A Anthropic retornou erro ({e.status_code}) ao testar a chave.")
+    return getattr(modelo, "display_name", None) or MODELO
 
 
 def definir_consentimento(s: Session, habilitar: bool) -> None:
@@ -128,10 +151,10 @@ def definir_consentimento(s: Session, habilitar: bool) -> None:
     auditar(s, "ia_habilitada" if habilitar else "ia_desabilitada", "perfil", 1)
 
 
-def _cliente_padrao():
+def _cliente_padrao(s: Session):
     import anthropic
 
-    return anthropic.Anthropic(api_key=chave_api(), max_retries=2, timeout=180.0)
+    return anthropic.Anthropic(api_key=chave_api(s), max_retries=2, timeout=180.0)
 
 
 @dataclass
@@ -147,7 +170,7 @@ def _chamar(s: Session, funcao: str, instrucao: str, conteudo: str, esquema: typ
         raise ErroIA(motivo)
     import anthropic
 
-    cliente = cliente or _cliente_padrao()
+    cliente = cliente or _cliente_padrao(s)
     try:
         resposta = cliente.beta.messages.parse(
             model=MODELO,

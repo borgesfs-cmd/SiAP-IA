@@ -1,7 +1,11 @@
-# SIAP-IA — Documento Mestre v1.4
+# SIAP-IA — Documento Mestre v1.5
 
-**Versão 1.4 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.5 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.5 (Pós-MVP B)
+- **Aba 🔑 Chave da API:** a chave do Claude é colada no próprio sistema, testada, guardada criptografada (derivada da senha do app) e nunca exibida inteira nem incluída no backup.
+- **Painéis:** visão geral, avaliação individual (percentis transcritos e linha do tempo) e comparativo entre avaliações. Sem cálculo de normas.
 
 ## v1.4 (Pós-MVP A)
 - **Consultor IA** (API do Claude): consultor metodológico, revisão de redação de seções de documentos e sugestão de códigos qualitativos. Fica desligado por padrão; ativa-se com termo de consentimento e chave `ANTHROPIC_API_KEY`. O texto é pseudonimizado, as respostas são só sugestões, números novos são sinalizados e a auditoria guarda apenas metadados.
@@ -52,7 +56,7 @@ SIAP-IA: apoio ao trabalho de avaliação psicológica em psicodiagnóstico adul
 | 3. Avaliações | Finalidades (padrão + manuais), caso codificado, entrevistas e observações, instrumentos aplicados (somente versões elegíveis para a finalidade), resultados transcritos, alertas de conformidade | ✅ concluída |
 | 4. Documentos | Laudo, atestado, relatório, parecer e declaração; rascunho → revisado → aprovado → emitido; retificação; .docx; SHA-256 | ✅ concluída |
 | Pós-MVP A | Consultor IA metodológico e de redação; análise qualitativa (codificação, matrizes, evidências) | ✅ concluída |
-| Pós-MVP B | Dashboards | — |
+| Pós-MVP B | Dashboards | ✅ concluída |
 | Pós-MVP C | Estatística de pesquisa: descritivas, TCT, precisão, AFE/AFC, TRI, normas de estudos próprios | — |
 
 ## 5. Inventário inicial (candidatos, todos "não verificado")

@@ -2,8 +2,10 @@
 
 **Sistema Inteligente de Avaliação Psicológica** — uso pessoal e não comercial.
 
-Versão atual: **MVP completo + Consultor IA e Análise qualitativa**
-- **Consultor IA (opcional):** sugestões metodológicas, revisão de redação e códigos qualitativos via API do Claude, com texto pseudonimizado e consentimento prévio. Requer `ANTHROPIC_API_KEY` nos Secrets (uso cobrado pela Anthropic).
+Versão atual: **MVP + Consultor IA, Análise qualitativa e Painéis**
+- **Painéis:** visão geral do trabalho, percentis transcritos por avaliação, linha do tempo e comparativo entre avaliações.
+- **🔑 Chave da API:** cole a chave do Claude no próprio app; ela é testada e guardada criptografada.
+- **Consultor IA (opcional):** sugestões metodológicas, revisão de redação e códigos qualitativos via API do Claude, com texto pseudonimizado e consentimento prévio. Basta colar a chave na aba 🔑 Chave da API (uso cobrado pela Anthropic).
 - **Análise qualitativa:** livro de códigos, codificação de trechos literais de entrevistas, matriz e evidências.
 - **Documentos psicológicos:** laudo, atestado, relatório, parecer e declaração (estrutura da Res. CFP 06/2019). Rascunho montado com os dados da avaliação, aprovação com confirmação de autoria, emissão com código de integridade (SHA-256), retificação e arquivo Word. **O nome da pessoa avaliada é digitado só na hora de baixar o arquivo e nunca é gravado.**
 - **Avaliações:** caso identificado só por código (AV-AAAA-NNN), finalidade, perfil (faixa etária, idade, escolaridade), demanda, entrevistas/observações, instrumentos aplicados e resultados transcritos do manual. O sistema recusa textos com CPF, e-mail ou telefone.

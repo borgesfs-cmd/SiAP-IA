@@ -72,7 +72,7 @@ def test_ia_desligada_por_padrao_e_exige_chave(s, monkeypatch):
     assert not ok and "desligado" in motivo
     ia.definir_consentimento(s, True)
     ok, motivo = ia.situacao(s)
-    assert not ok and "ANTHROPIC_API_KEY" in motivo
+    assert not ok and "Chave da API" in motivo
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-teste")
     assert ia.situacao(s) == (True, "")
     with pytest.raises(ia.ErroIA):

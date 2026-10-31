@@ -43,8 +43,7 @@ else:
 
 if habilitada and not disponivel:
     st.warning(motivo)
-    st.caption("Crie a chave em console.anthropic.com → API keys. No Streamlit, acrescente aos Secrets a linha "
-               '`ANTHROPIC_API_KEY = "sua-chave"`. O uso da API é cobrado pela Anthropic.')
+    st.page_link("paginas/chave_api.py", label="Ir para Chave da API", icon="🔑")
 
 st.divider()
 st.subheader("Consultor metodológico")

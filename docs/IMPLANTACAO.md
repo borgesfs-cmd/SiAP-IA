@@ -40,8 +40,10 @@ precisa ficar fora dele. Sem `DATABASE_URL`, o app usa SQLite e serve só para t
 
 ## Ativar o Consultor IA (opcional)
 1. Crie uma chave em <https://console.anthropic.com> → **API keys**. O uso é cobrado pela Anthropic; defina um limite de gastos no console.
-2. No Streamlit, em **Settings → Secrets**, acrescente uma linha: `ANTHROPIC_API_KEY = "sua-chave"`.
-3. No app, abra **Consultor IA**, leia o termo, marque a concordância e clique em **Ativar**.
+2. No app, abra **🔑 Chave da API**, cole a chave e clique em **Testar e salvar**. Ela é guardada criptografada com a senha do app (`APP_PASSWORD`), então essa senha precisa estar nos Secrets.
+3. Abra **💡 Consultor IA**, leia o termo, marque a concordância e clique em **Ativar**.
+
+Se você trocar a `APP_PASSWORD`, a chave salva deixa de abrir: basta colá-la de novo. Alternativa avançada: colocar `ANTHROPIC_API_KEY = "..."` nos Secrets, que tem prioridade.
 
 ## Se aparecer erro
 - **"Banco de dados não configurado corretamente"** (ou `UnicodeEncodeError … idna`): a `DATABASE_URL` está com o texto de exemplo, incompleta ou com espaços. No Streamlit, abra **Manage app → ⋮ → Settings → Secrets**, cole a connection string do Neon entre aspas e salve. O app reinicia sozinho.
