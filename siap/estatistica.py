@@ -401,3 +401,167 @@ def tri(df: pd.DataFrame, colunas: list[str], modelo: str = "2PL") -> ResultadoT
     alertas.append("A TRI unidimensional pressupõe um único traço latente e independência local; "
                    "verifique a dimensionalidade (AFE) antes de interpretar.")
     return ResultadoTRI(modelo, n, parametros, alertas)
+
+
+# ------------------------------------------------------------------- AFC
+
+@dataclass
+class ResultadoAFC:
+    n: int
+    convergiu: bool
+    qui2: float
+    gl: int
+    p: float
+    cfi: float
+    tli: float
+    rmsea: float
+    rmsea_ic90: tuple[float, float]
+    srmr: float
+    cargas: pd.DataFrame
+    correlacoes_fatores: pd.DataFrame
+    alertas: list[str] = field(default_factory=list)
+
+
+def afc(df: pd.DataFrame, modelo: dict[str, list[str]]) -> ResultadoAFC:
+    """AFC por máxima verossimilhança (estrutura simples: cada item em um único fator).
+
+    Identificação pela variância dos fatores fixada em 1. Matriz de covariâncias com divisor N e
+    qui-quadrado = N·F_ML, como no padrão do lavaan. Índices: CFI, TLI, RMSEA (IC 90%) e SRMR.
+    """
+    from scipy.optimize import minimize
+
+    fatores = [f.strip() for f in modelo if f.strip()]
+    if not fatores:
+        raise ErroValidacao("Defina ao menos um fator com seus itens.")
+    itens: list[str] = []
+    dono: list[int] = []
+    for i, f in enumerate(fatores):
+        lista = modelo[f]
+        if len(lista) < 2:
+            raise ErroValidacao(f"O fator “{f}” precisa de ao menos 2 itens (recomendado: 3 ou mais).")
+        for it in lista:
+            if it in itens:
+                raise ErroValidacao(f"O item “{it}” está em mais de um fator; use estrutura simples.")
+            itens.append(it)
+            dono.append(i)
+    dados, alertas = _itens(df, itens, minimo=3)
+    x = dados.to_numpy(dtype=float)
+    n, p = x.shape
+    m = len(fatores)
+    s = np.cov(x, rowvar=False, ddof=0)
+    _, logdet_s = np.linalg.slogdet(s)
+    idx_phi = [(a, b) for a in range(m) for b in range(a + 1, m)]
+    q = p + len(idx_phi) + p
+    gl = p * (p + 1) // 2 - q
+    if gl < 0:
+        raise ErroValidacao("Modelo não identificado (mais parâmetros que informações). Acrescente itens.")
+
+    def montar(theta):
+        lam = np.zeros((p, m))
+        lam[np.arange(p), dono] = theta[:p]
+        phi = np.eye(m)
+        for k, (a, b) in enumerate(idx_phi):
+            phi[a, b] = phi[b, a] = theta[p + k]
+        psi = theta[p + len(idx_phi):]
+        return lam, phi, psi, lam @ phi @ lam.T + np.diag(psi)
+
+    def objetivo(theta):
+        lam, phi, psi, sigma = montar(theta)
+        sinal, logdet = np.linalg.slogdet(sigma)
+        if sinal <= 0:
+            return 1e10, np.zeros_like(theta)
+        inv = np.linalg.inv(sigma)
+        f = logdet + np.trace(s @ inv) - logdet_s - p
+        g = inv @ (sigma - s) @ inv  # dF/dΣ
+        d_lam = 2 * g @ lam @ phi
+        d_phi = lam.T @ g @ lam
+        grad = np.concatenate([d_lam[np.arange(p), dono],
+                               [2 * d_phi[a, b] for a, b in idx_phi],
+                               np.diag(g)])
+        return f, grad
+
+    dp = np.sqrt(np.diag(s))
+    inicio = np.concatenate([0.7 * dp, np.full(len(idx_phi), 0.3), 0.5 * np.diag(s)])
+    limites = [(None, None)] * p + [(-0.999, 0.999)] * len(idx_phi) + [(1e-6 * np.diag(s).max(), None)] * p
+    res = minimize(objetivo, inicio, jac=True, method="L-BFGS-B", bounds=limites,
+                   options={"maxiter": 5000, "ftol": 1e-13, "gtol": 1e-9})
+    theta = res.x
+    lam, phi, psi, sigma = montar(theta)
+    # orienta cada fator para cargas majoritariamente positivas
+    sinais = np.array([1.0 if lam[np.array(dono) == j, j].sum() >= 0 else -1.0 for j in range(m)])
+    lam, phi = lam * sinais, phi * np.outer(sinais, sinais)
+
+    fmin = float(res.fun)
+    qui2 = n * fmin
+    pval = float(stats.chi2.sf(qui2, gl)) if gl > 0 else float("nan")
+    qui2_0 = n * (np.log(np.diag(s)).sum() - logdet_s)
+    gl_0 = p * (p - 1) // 2
+    d, d0 = max(qui2 - gl, 0.0), max(qui2_0 - gl_0, 0.0)
+    cfi = 1.0 - d / max(d0, d, 1e-12)
+    tli = ((qui2_0 / gl_0) - (qui2 / gl)) / ((qui2_0 / gl_0) - 1) if gl > 0 else float("nan")
+    rmsea = float(np.sqrt(d / (gl * n))) if gl > 0 else float("nan")
+
+    def _lambda_nc(prob):
+        if gl <= 0 or stats.chi2.cdf(qui2, gl) < prob:
+            return 0.0
+        from scipy.optimize import brentq
+        return brentq(lambda nc: stats.ncx2.cdf(qui2, gl, nc) - prob, 1e-9, max(10 * qui2, 100))
+
+    ic = (float(np.sqrt(_lambda_nc(0.95) / (gl * n))) if gl > 0 else float("nan"),
+          float(np.sqrt(_lambda_nc(0.05) / (gl * n))) if gl > 0 else float("nan"))
+    escala = np.sqrt(np.outer(np.diag(s), np.diag(s)))
+    resid = (s - sigma) / escala
+    tri_inf = np.tril_indices(p)
+    srmr = float(np.sqrt(np.mean(resid[tri_inf] ** 2)))
+
+    # erros-padrão pela informação esperada (normal): I_ab = ½ tr(Σ⁻¹ dΣ_a Σ⁻¹ dΣ_b)
+    inv = np.linalg.inv(sigma)
+    derivadas = []
+    for i in range(p):
+        e = np.zeros((p, m))
+        e[i, dono[i]] = 1
+        derivadas.append(e @ phi @ lam.T + lam @ phi @ e.T)
+    for a, b in idx_phi:
+        e = np.zeros((m, m))
+        e[a, b] = e[b, a] = 1
+        derivadas.append(lam @ e @ lam.T)
+    for i in range(p):
+        e = np.zeros((p, p))
+        e[i, i] = 1
+        derivadas.append(e)
+    a_mats = [inv @ dd for dd in derivadas]
+    info = np.array([[0.5 * np.trace(ai @ aj) for aj in a_mats] for ai in a_mats])
+    try:
+        cov = np.linalg.inv(n * info)
+        ep = np.sqrt(np.clip(np.diag(cov), 0, None))
+    except np.linalg.LinAlgError:
+        ep = np.full(q, np.nan)
+        alertas.append("Não foi possível calcular os erros-padrão (matriz de informação singular).")
+
+    carga_bruta = lam[np.arange(p), dono]
+    padronizada = carga_bruta / np.sqrt(np.diag(sigma))
+    z = carga_bruta / ep[:p]
+    cargas = pd.DataFrame({
+        "Fator": [fatores[j] for j in dono], "Item": itens, "Carga": carga_bruta, "EP": ep[:p], "z": z,
+        "p": 2 * stats.norm.sf(np.abs(z)), "Carga padronizada": padronizada, "R²": padronizada ** 2,
+    })
+    correlacoes = pd.DataFrame(phi, index=fatores, columns=fatores)
+
+    if not res.success:
+        alertas.append(f"A estimação pode não ter convergido ({res.message}). Interprete com cautela.")
+    if np.any(psi <= 1.01e-6 * np.diag(s).max()):
+        alertas.append("Variância residual no limite inferior (caso Heywood): reveja o modelo.")
+    if np.any(np.abs(phi[np.triu_indices(m, 1)]) > 0.95):
+        alertas.append("Correlação entre fatores próxima de 1: os fatores podem não ser distintos.")
+    if n < 200:
+        alertas.append(f"Amostra pequena para AFC (n = {n}); recomenda-se ao menos 200 casos.")
+    fracos = cargas.loc[cargas["Carga padronizada"] < 0.40, "Item"].tolist()
+    if fracos:
+        alertas.append("Cargas padronizadas < 0,40: " + ", ".join(fracos) + ".")
+    if any(len(modelo[f]) < 3 for f in fatores):
+        alertas.append("Fatores com 2 itens são frágeis; prefira 3 ou mais itens por fator.")
+    alertas.append("Pontos de corte usuais (CFI/TLI ≥ 0,95; RMSEA ≤ 0,06; SRMR ≤ 0,08) são referências, "
+                   "não regras: avalie o ajuste junto com a teoria e as cargas. Estimador ML pressupõe "
+                   "normalidade multivariada; para itens ordinais com poucas categorias, prefira WLSMV (R/lavaan).")
+    return ResultadoAFC(n, bool(res.success), float(qui2), int(gl), pval, float(cfi), float(tli), rmsea, ic,
+                        srmr, cargas, correlacoes, alertas)

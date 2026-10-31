@@ -1,7 +1,11 @@
-# SIAP-IA — Documento Mestre v1.7
+# SIAP-IA — Documento Mestre v1.8
 
-**Versão 1.7 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.8 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.8 (AFC e restauração)
+- **AFC** por máxima verossimilhança, com CFI, TLI, RMSEA (IC 90%), SRMR, cargas, erros-padrão e correlações entre fatores; atalho para usar a estrutura da AFE. **Validação:** reproduz exatamente os resultados publicados do lavaan (R) para Holzinger & Swineford (1939): χ² = 85,306 (gl = 24), CFI = 0,931, TLI = 0,896, RMSEA = 0,092 [0,071; 0,114], SRMR = 0,065.
+- **Restauração de backup** na própria tela: valida o arquivo, mostra o resumo, oferece cópia do estado atual, exige confirmação digitada e restaura tudo numa única transação (a chave da API é preservada).
 
 ## v1.7 (Interface)
 - Redesenho visual a pedido da usuária: tema próprio (claro e escuro), menu por áreas com ícones, página inicial com ações rápidas, primeiros passos, avisos e atividade recente; botão “Como usar” em todas as páginas; nova avaliação em janela com botões de escolha; etapas e próximo passo sugerido na avaliação; listas clicáveis; atalho do catálogo para a verificação SATEPSI; tipos de documento em cartões.
@@ -128,7 +132,7 @@ Essa regra está no `CLAUDE.md` (regra 4) e aparece como instrução fixa na pá
 | Cadastro persiste após reinício e suporta várias versões do mesmo instrumento | ✅ testado |
 | Teste desfavorável, não verificado ou vencido não é liberado | ✅ testado |
 | Toda alteração gera auditoria; histórico SATEPSI preservado | ✅ testado |
-| Backup integral exportável | ✅ testado (restauração automatizada: pendente) |
+| Backup integral exportável e restaurável | ✅ testado (ida e volta idêntica, SQLite e PostgreSQL) |
 | Resultados psicométricos reproduzem bases de referência | pós-MVP C |
 | IA não cria valores numéricos e distingue cálculo de interpretação | ✅ números novos sinalizados; respostas rotuladas como sugestão |
 | Documentos permanecem rascunho até aprovação | ✅ testado |

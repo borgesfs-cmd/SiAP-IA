@@ -10,7 +10,7 @@ from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
 COR_1, COR_2 = "#2a78d6", "#eb6834"  # paleta de referência, slots 1 e 2
 
-iniciar_pagina("Pesquisa (estatística)", "Análises psicométricas para estudos com dados anonimizados.", "📐", ["Importe um arquivo CSV/Excel (uma linha por participante, sem nomes) ou crie o **exemplo simulado**.", "Explore os dados em **Descritivas**.", "Em **Precisão**, selecione os itens de uma escala e calcule alfa e ômega.", "Em **AFE**, veja quantos fatores reter e as cargas.", "Em **TRI**, estime os parâmetros dos itens."])
+iniciar_pagina("Pesquisa (estatística)", "Análises psicométricas para estudos com dados anonimizados.", "📐", ["Importe um arquivo CSV/Excel (uma linha por participante, sem nomes) ou crie o **exemplo simulado**.", "Explore os dados em **Descritivas**.", "Em **Precisão**, selecione os itens de uma escala e calcule alfa e ômega.", "Em **AFE**, veja quantos fatores reter e as cargas.", "Em **AFC**, teste se a estrutura teórica se ajusta aos dados (dica: use a estrutura sugerida pela AFE).", "Em **TRI**, estime os parâmetros dos itens."])
 
 
 def baixar(df: pd.DataFrame, nome: str, chave: str):
@@ -65,8 +65,8 @@ with transacao() as s:
     df = pq.carregar(s, cid)
 numericas = es.colunas_numericas(df)
 
-aba_dados, aba_desc, aba_prec, aba_afe, aba_tri = st.tabs(
-    ["Dados", "Descritivas", "Precisão (TCT)", "Análise fatorial (AFE)", "TRI"])
+aba_dados, aba_desc, aba_prec, aba_afe, aba_afc, aba_tri = st.tabs(
+    ["Dados", "Descritivas", "Precisão (TCT)", "Análise fatorial (AFE)", "Confirmatória (AFC)", "TRI"])
 
 with aba_dados:
     st.caption(f"{info[2] or 'Sem descrição.'} · arquivo {info[6]} · importado em {data_br(info[5])}")
@@ -156,6 +156,62 @@ with aba_afe:
         with st.expander("KMO por item"):
             st.dataframe(a.kmo_itens.round(3), hide_index=True, width="stretch")
         mostrar_alertas(a.alertas)
+
+with aba_afc:
+    st.caption("Especifique quais itens medem cada fator (cada item em um único fator) e teste o ajuste do modelo. "
+               "Estimador: máxima verossimilhança (validado contra o lavaan/R).")
+    chave_mod = f"afc_modelo_{cid}"
+    a_prev = st.session_state.get(f"res_afe_{cid}")
+    if a_prev is not None and st.button("Usar a estrutura sugerida pela AFE", icon=":material/auto_fix_high:",
+                                        key=f"afe2afc_{cid}"):
+        nomes_f = [c for c in a_prev.cargas.columns if c.startswith("F")]
+        estrutura = {f: [] for f in nomes_f}
+        for _, linha in a_prev.cargas.iterrows():
+            estrutura[max(nomes_f, key=lambda f: abs(linha[f]))].append(linha["Item"])
+        st.session_state[chave_mod] = {f: v for f, v in estrutura.items() if v}
+        st.session_state[f"afc_n_{cid}"] = len(st.session_state[chave_mod])
+        for i, (f, v) in enumerate(st.session_state[chave_mod].items()):
+            st.session_state[f"afc_nome_{cid}_{i}"] = f
+            st.session_state[f"afc_itens_{cid}_{i}"] = v
+    n_fat = st.number_input("Número de fatores", 1, 8, 1, key=f"afc_n_{cid}")
+    modelo = {}
+    colunas_f = st.columns(min(int(n_fat), 3))
+    for i in range(int(n_fat)):
+        with colunas_f[i % len(colunas_f)], st.container(border=True):
+            nome_f = st.text_input("Nome do fator", f"F{i + 1}", key=f"afc_nome_{cid}_{i}")
+            itens_f = st.multiselect("Itens", numericas, key=f"afc_itens_{cid}_{i}", placeholder="Selecione…")
+            if nome_f.strip():
+                modelo[nome_f.strip()] = itens_f
+    if st.button("Rodar AFC", type="primary", icon=":material/play_arrow:", key=f"b_afc_{cid}",
+                 disabled=sum(len(v) for v in modelo.values()) < 3):
+        try:
+            with st.spinner("Estimando o modelo…"):
+                st.session_state[f"res_afc_{cid}"] = es.afc(df, modelo)
+        except es.ErroValidacao as erro:
+            st.error(str(erro))
+    rc = st.session_state.get(f"res_afc_{cid}")
+    if rc:
+        def fmt(v, casas=3):
+            return f"{v:.{casas}f}".replace(".", ",")
+        c = st.columns(5)
+        c[0].metric(f"χ² (gl = {rc.gl})", fmt(rc.qui2, 2), border=True,
+                    help="Qui-quadrado do modelo. Sensível ao tamanho da amostra.")
+        c[1].metric("CFI", fmt(rc.cfi), border=True, help="Referência usual: ≥ 0,95 (bom), ≥ 0,90 (aceitável).")
+        c[2].metric("TLI", fmt(rc.tli), border=True, help="Referência usual: ≥ 0,95 (bom), ≥ 0,90 (aceitável).")
+        c[3].metric("RMSEA", fmt(rc.rmsea), border=True,
+                    help=f"IC 90%: {fmt(rc.rmsea_ic90[0])} – {fmt(rc.rmsea_ic90[1])}. Referência: ≤ 0,06 (bom), ≤ 0,08 (aceitável).")
+        c[4].metric("SRMR", fmt(rc.srmr), border=True, help="Referência usual: ≤ 0,08.")
+        st.caption(f"n = {rc.n} · p(χ²) = {'< 0,001' if rc.p < 0.001 else fmt(rc.p)} · "
+                   f"RMSEA IC 90% {fmt(rc.rmsea_ic90[0])}–{fmt(rc.rmsea_ic90[1])} · calculado pelo sistema.")
+        st.markdown("##### Cargas fatoriais")
+        st.dataframe(rc.cargas.style.format(precision=3).map(
+            lambda v: "font-weight: 700" if isinstance(v, float) and v >= 0.5 else "", subset=["Carga padronizada"]),
+            hide_index=True, width="stretch")
+        baixar(rc.cargas, "afc_cargas", f"b_afc_c_{cid}")
+        if len(rc.correlacoes_fatores) > 1:
+            st.markdown("##### Correlações entre fatores")
+            st.dataframe(rc.correlacoes_fatores.round(3), width="stretch")
+        mostrar_alertas(rc.alertas)
 
 with aba_tri:
     modelo = st.segmented_control("Modelo", ["2PL", "GRM"], default="2PL", key=f"mod_{cid}",

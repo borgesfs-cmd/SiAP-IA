@@ -3,7 +3,7 @@
 **Sistema Inteligente de Avaliação Psicológica** — uso pessoal e não comercial.
 
 Versão atual: **MVP + Consultor IA, Análise qualitativa, Painéis e Estatística de pesquisa**, com interface redesenhada (modos claro e escuro, página inicial com primeiros passos, ajuda “Como usar” em cada página).
-- **Pesquisa (estatística):** bases anonimizadas (CSV/XLSX), descritivas, alfa e ômega, análise de itens, análise fatorial exploratória e TRI (2PL e resposta graduada). Inclui um conjunto de exemplo simulado.
+- **Pesquisa (estatística):** bases anonimizadas (CSV/XLSX), descritivas, alfa e ômega, análise de itens, análise fatorial exploratória e **confirmatória** (validada contra o lavaan) e TRI (2PL e resposta graduada). Inclui um conjunto de exemplo simulado.
 - **Painéis:** visão geral do trabalho, percentis transcritos por avaliação, linha do tempo e comparativo entre avaliações.
 - **🔑 Chave da API:** cole a chave do Claude no próprio app; ela é testada e guardada criptografada.
 - **Consultor IA (opcional):** sugestões metodológicas, revisão de redação e códigos qualitativos via API do Claude, com texto pseudonimizado e consentimento prévio. Basta colar a chave na aba 🔑 Chave da API (uso cobrado pela Anthropic).
@@ -13,7 +13,7 @@ Versão atual: **MVP + Consultor IA, Análise qualitativa, Painéis e Estatísti
 - **Finalidades:** Psicodiagnóstico, Avaliação neuropsicológica, Trânsito, Porte/posse de arma, Seleção, Treinamento e Pesquisa, além das que você incluir.
 - **Catálogo de testes:** cadastro, versões independentes (ex.: d2 e d2-R), busca e edição com histórico.
 - **Monitor SATEPSI (modo assistido):** você consulta o [site oficial](https://satepsi.cfp.org.br/) e registra a situação com evidência; o sistema bloqueia uso profissional de tudo que não estiver favorável **e** dentro da validade (padrão 90 dias). A verificação pode valer para todas as finalidades ou só para algumas. Um teste bloqueado não pode ser registrado numa avaliação.
-- **Auditoria e backup:** toda alteração é registrada; backup integral em JSON.
+- **Auditoria e backup:** toda alteração é registrada; backup integral em JSON e **restauração** pela própria tela.
 
 O inventário inicial (14 testes / 15 versões) entra como **não verificado**, portanto bloqueado.
 

@@ -1,6 +1,8 @@
 """Validação das rotinas estatísticas: recuperam parâmetros conhecidos de dados simulados
 (critério de aceitação "resultados reproduzem bases de referência")."""
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -148,3 +150,37 @@ def test_importar_carregar_remover_e_exemplo(fabrica):
         a = es.afe(df, [f"E{i}" for i in range(1, 5)] + [f"A{i}" for i in range(1, 5)])
         assert a.sugestao_paralela == 2
         assert pq.criar_exemplo(s).nome == "Exemplo simulado 2"
+
+
+# ------------------------------------------------- AFC × lavaan (referência)
+
+HS = Path(__file__).parent / "dados" / "holzinger_swineford_1939.csv"
+MODELO_HS = {"visual": ["x1", "x2", "x3"], "textual": ["x4", "x5", "x6"], "speed": ["x7", "x8", "x9"]}
+
+
+def test_afc_reproduz_lavaan_holzinger_swineford():
+    """Valores de referência: lavaan::cfa(HS.model, HolzingerSwineford1939), estimador ML."""
+    r = es.afc(pd.read_csv(HS), MODELO_HS)
+    assert r.convergiu and r.n == 301 and r.gl == 24
+    assert r.qui2 == pytest.approx(85.306, abs=0.01)
+    assert r.cfi == pytest.approx(0.931, abs=0.001)
+    assert r.tli == pytest.approx(0.896, abs=0.001)
+    assert r.rmsea == pytest.approx(0.092, abs=0.001)
+    assert r.rmsea_ic90[0] == pytest.approx(0.071, abs=0.001) and r.rmsea_ic90[1] == pytest.approx(0.114, abs=0.001)
+    assert r.srmr == pytest.approx(0.065, abs=0.001)
+    lam = r.cargas["Carga"].to_numpy()
+    # cargas não padronizadas na parametrização do lavaan (1º item de cada fator fixado em 1)
+    marcador = [lam[1] / lam[0], lam[2] / lam[0], lam[4] / lam[3], lam[5] / lam[3], lam[7] / lam[6], lam[8] / lam[6]]
+    assert np.allclose(marcador, [0.554, 0.729, 1.113, 0.926, 1.180, 1.082], atol=0.001)
+    assert np.allclose(r.cargas["Carga padronizada"], [0.772, 0.424, 0.581, 0.852, 0.855, 0.838, 0.570, 0.723, 0.665],
+                       atol=0.001)
+    phi = r.correlacoes_fatores.to_numpy()
+    assert np.allclose([phi[0, 1], phi[0, 2], phi[1, 2]], [0.459, 0.471, 0.283], atol=0.001)
+
+
+def test_afc_validacoes():
+    df = pd.read_csv(HS)
+    with pytest.raises(catalogo.ErroValidacao, match="mais de um fator"):
+        es.afc(df, {"a": ["x1", "x2", "x3"], "b": ["x3", "x4", "x5"]})
+    with pytest.raises(catalogo.ErroValidacao, match="ao menos 2"):
+        es.afc(df, {"a": ["x1"], "b": ["x2", "x3", "x4"]})

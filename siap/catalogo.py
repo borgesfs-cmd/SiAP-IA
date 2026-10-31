@@ -299,7 +299,7 @@ def carregar_evidencia(s: Session, verificacao_id: int) -> VerificacaoSATEPSI | 
 
 # --------------------------------------------------------------------- backup
 
-def exportar_backup(s: Session) -> dict:
+def exportar_backup(s: Session, registrar: bool = True) -> dict:
     """Cópia integral em JSON de todas as tabelas (binários em base64). Guarde em local seguro."""
     dados: dict = {
         "formato": "siap-ia-backup",
@@ -319,5 +319,6 @@ def exportar_backup(s: Session) -> dict:
                     linha[coluna] = valor
             linhas.append(linha)
         dados[tabela.name] = linhas
-    auditar(s, "exportar_backup", "sistema", None, tabelas=len(dados) - 3)
+    if registrar:
+        auditar(s, "exportar_backup", "sistema", None, tabelas=len(dados) - 3)
     return json.loads(json.dumps(dados, ensure_ascii=False, default=str))

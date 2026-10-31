@@ -121,3 +121,7 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 ## 19. Redesenho da interface (31/10/2026)
 **Usuário:** achou a interface pouco atrativa e pouco didática; pediu algo mais moderno, intuitivo e clicável.
 **Entrega:** tema próprio claro/escuro com fonte Inter; logotipo; menu agrupado por áreas; página Início (ações rápidas, primeiros passos com progresso, avisos, atividade recente); cabeçalho com “Como usar” em todas as páginas; janela de nova avaliação com botões de escolha; indicador de etapas e próximo passo; listas clicáveis; atalho Catálogo → SATEPSI; cartões de tipos de documento; textos de interface em português.
+
+## 20. AFC e restauração de backup (31/10/2026)
+**Usuário:** "vamos à próxima fase".
+**Entrega:** AFC própria por máxima verossimilhança, validada contra o lavaan com os dados de Holzinger & Swineford (1939), com resultados idênticos; restauração de backup pela tela, com validação, cópia prévia e confirmação. Interface da AFC com atalho a partir da AFE.

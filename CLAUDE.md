@@ -37,10 +37,16 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
 
 | B. Painéis | ✅ | Visão geral (contagens, mês, finalidade, instrumentos, SATEPSI, vencimentos), avaliação individual (percentis transcritos + linha do tempo), comparativo entre avaliações; Altair, cor única, tabela em cada gráfico |
 
-| C. Estatística de pesquisa | ✅ | Conjuntos anonimizados (CSV/XLSX, checagem de identificadores), descritivas, alfa (IC Feldt) e ômega, análise de itens, AFE (eixos principais, varimax/promax, KMO, Bartlett, análise paralela), TRI 2PL e GRM (`girth`) |
+| C. Estatística de pesquisa | ✅ | Conjuntos anonimizados (CSV/XLSX, checagem de identificadores), descritivas, alfa (IC Feldt) e ômega, análise de itens, AFE (eixos principais, varimax/promax, KMO, Bartlett, análise paralela), AFC (ML, validada contra lavaan), TRI 2PL e GRM (`girth`) |
+| D. Restauração de backup | ✅ | Aba Restaurar: validação, resumo, cópia prévia, confirmação digitada, restauração transacional |
 
-Pendente (fora do MVP): AFC — `semopy` não compila de forma confiável; fazer depois via R (`lavaan`, `Rscript`) ou
-outra biblioteca validada.
+**AFC (`estatistica.afc`):** implementação própria por ML (estrutura simples, variância dos fatores = 1, divisor N,
+χ² = N·F como no lavaan); CFI, TLI, RMSEA (IC 90%), SRMR, EP pela informação esperada. Validada contra o lavaan com
+Holzinger & Swineford (1939) em `tests/dados/` — esse teste não pode ser afrouxado. Não usar `semopy` (não compila).
+
+**Backup (`siap/backup.py`):** restauração substitui tudo numa transação, valida antes de apagar, preserva
+`segredos_cifrados`, ajusta sequências no PostgreSQL. Ao criar tabela nova, ela entra no backup automaticamente
+(gera-se a partir de `Base.metadata`); se for sensível como segredos, inclua-a em `PRESERVADAS` e exclua do export.
 
 **Estatística (`siap/estatistica.py`):** implementação própria de PAF, varimax, promax (como `stats::promax`), KMO,
 Bartlett e análise paralela — NÃO reintroduzir `factor_analyzer` (incompatível com scikit-learn ≥ 1.8). Toda rotina
@@ -75,7 +81,7 @@ Avaliação concluída/cancelada é somente leitura até ser reaberta.
   `siap/finalidades.py`; `siap/avaliacoes.py` — avaliações + filtro de identificadores (CPF/e-mail/telefone);
   `siap/documentos.py` — documentos e fluxo; `siap/exportar_docx.py` — geração do Word;
   `siap/ia.py` — consultor IA; `siap/segredos.py` — chave da API cifrada; `siap/qualitativo.py` — análise qualitativa;
-  `siap/paineis.py` — agregações dos painéis; `siap/estatistica.py` + `siap/pesquisa.py` — estatística de pesquisa;
+  `siap/paineis.py` — agregações dos painéis; `siap/backup.py` — restauração; `siap/estatistica.py` + `siap/pesquisa.py` — estatística de pesquisa;
   `siap/inventario.py` — inventário inicial; `siap/db.py` — conexão + migrações; `siap/ui.py` — utilidades de tela
   (`executar` para ações de formulário).
 - `siap/migracoes/` — Alembic. Aplicadas automaticamente ao abrir o app.
