@@ -8,6 +8,8 @@ Versão atual: **MVP + Consultor IA, Análise qualitativa, Painéis e Estatísti
 - **🔑 Chave da API:** cole a chave do Claude no próprio app; ela é testada e guardada criptografada.
 - **Consultor IA (opcional):** sugestões metodológicas, revisão de redação e códigos qualitativos via API do Claude, com texto pseudonimizado e consentimento prévio. Basta colar a chave na aba 🔑 Chave da API (uso cobrado pela Anthropic).
 - **Análise qualitativa:** livro de códigos, codificação de trechos literais de entrevistas, matriz e evidências.
+- **Exportações:** documentos em **PDF** e Word; **registro documental** completo de cada avaliação; **relatório de pesquisa** com tabelas APA.
+- **Biblioteca de textos:** seus modelos e frases, inseridos com um clique nos documentos.
 - **Documentos psicológicos:** laudo, atestado, relatório, parecer e declaração (estrutura da Res. CFP 06/2019). Rascunho montado com os dados da avaliação, aprovação com confirmação de autoria, emissão com código de integridade (SHA-256), retificação e arquivo Word. **O nome da pessoa avaliada é digitado só na hora de baixar o arquivo e nunca é gravado.**
 - **Avaliações:** caso identificado só por código (AV-AAAA-NNN), finalidade, perfil (faixa etária, idade, escolaridade), demanda, entrevistas/observações, instrumentos aplicados e resultados transcritos do manual. O sistema recusa textos com CPF, e-mail ou telefone.
 - **Finalidades:** Psicodiagnóstico, Avaliação neuropsicológica, Trânsito, Porte/posse de arma, Seleção, Treinamento e Pesquisa, além das que você incluir.

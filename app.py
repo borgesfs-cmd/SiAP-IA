@@ -17,6 +17,7 @@ st.navigation({
     "Atendimento": [
         st.Page("paginas/avaliacoes.py", title="Avaliações", icon=":material/assignment_ind:"),
         st.Page("paginas/documentos.py", title="Documentos", icon=":material/description:"),
+        st.Page("paginas/biblioteca.py", title="Biblioteca de textos", icon=":material/library_books:"),
         st.Page("paginas/qualitativo.py", title="Análise qualitativa", icon=":material/format_quote:"),
     ],
     "Testes e conformidade": [

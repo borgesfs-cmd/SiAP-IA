@@ -1,7 +1,14 @@
-# SIAP-IA — Documento Mestre v1.8
+# SIAP-IA — Documento Mestre v1.9
 
-**Versão 1.8 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.9 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.9 (Exportações e biblioteca)
+- **PDF direto** dos documentos psicológicos (além do Word), com a mesma aparência, paginação e código de integridade.
+- **Registro documental** de cada avaliação (Word/PDF): identificação codificada, demanda, registros, instrumentos e resultados, análise qualitativa, documentos (com o texto emitido) e histórico — para guarda pelo prazo do CFP.
+- **Biblioteca de modelos e frases**, com inserção em um clique nas seções dos documentos.
+- **Relatório de pesquisa** (Word/PDF) com tabelas no padrão APA, método descritivo e referências.
+- Correção: aplicar sugestão da IA agora atualiza o editor (antes o texto antigo podia sobrescrever a sugestão).
 
 ## v1.8 (AFC e restauração)
 - **AFC** por máxima verossimilhança, com CFI, TLI, RMSEA (IC 90%), SRMR, cargas, erros-padrão e correlações entre fatores; atalho para usar a estrutura da AFE. **Validação:** reproduz exatamente os resultados publicados do lavaan (R) para Holzinger & Swineford (1939): χ² = 85,306 (gl = 24), CFI = 0,931, TLI = 0,896, RMSEA = 0,092 [0,071; 0,114], SRMR = 0,065.

@@ -4,8 +4,8 @@ import streamlit as st
 
 from siap import avaliacoes as av
 from siap import documentos as dc
-from siap import ia
-from siap.exportar_docx import gerar_docx
+from siap import biblioteca, ia
+from siap.exportar_docx import gerar_docx, gerar_pdf
 from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
 iniciar_pagina("Documentos", "Laudos, atestados, relatórios, pareceres e declarações conforme a Resolução CFP 06/2019.", "📝", ["Preencha seus **dados profissionais** (uma vez).", "Escolha a avaliação e clique no tipo de documento para gerar o rascunho.", "Complete os trechos marcados com [[...]] e salve.", "Marque como **revisado**, **aprove** e **emita**.", "Para baixar o Word, digite o nome da pessoa no campo indicado — ele não é gravado."])
@@ -94,6 +94,7 @@ with transacao() as s:
     sucessor = dc.substituido_por(s, documento_id)
     info["substituido_por"] = sucessor.codigo if sucessor else None
     secoes = [(sec.id, sec.titulo, sec.conteudo, sec.obrigatoria) for sec in d.secoes]
+    secoes_info = [(sec.id, sec.titulo, sec.conteudo, sec.obrigatoria, sec.chave) for sec in d.secoes]
     checagem = dc.checar(s, documento_id)
     dados_registrados = dc.resumo_dados_registrados(d.avaliacao)
     ia_ok, ia_motivo = ia.situacao(s)
@@ -117,6 +118,29 @@ with st.form(f"secoes_{documento_id}"):
 if salvar:
     executar(lambda s: dc.salvar_secoes(s, documento_id, novos),
              "Texto salvo." + (" O documento voltou a rascunho." if info["status"] in (dc.REVISADO, dc.APROVADO) else ""))
+
+# ------------------------------------------------- biblioteca de textos
+if not emitido:
+    with st.expander("📚 Inserir trecho da biblioteca"):
+        chaves_sec = {sid: (titulo, chave) for sid, titulo, _, _, chave in secoes_info}
+        ids_sec = list(chaves_sec)
+        preferida = next((i for i in ids_sec if chaves_sec[i][1] in ("analise", "conclusao", "texto")), ids_sec[0])
+        sec_alvo = st.selectbox("Seção", ids_sec, format_func=lambda i: chaves_sec[i][0],
+                                index=ids_sec.index(preferida), key=f"bib_sec_{documento_id}")
+        with transacao() as s:
+            disponiveis = [(tr.id, tr.titulo, tr.texto) for tr in biblioteca.listar(s, secao=chaves_sec[sec_alvo][1])]
+        if not disponiveis:
+            st.caption("Nenhum trecho para esta seção.")
+        for tid, titulo_tr, texto_tr in disponiveis:
+            c_txt, c_btn = st.columns([5, 1], vertical_alignment="center")
+            c_txt.markdown(f"**{titulo_tr}**  \n<span style='opacity:.7;font-size:.88rem'>"
+                           f"{texto_tr[:160] + ('…' if len(texto_tr) > 160 else '')}</span>", unsafe_allow_html=True)
+            if c_btn.button("Inserir", key=f"ins_{documento_id}_{tid}", icon=":material/add:"):
+                executar(lambda s, tid=tid: biblioteca.inserir_em_secao(s, documento_id=documento_id,
+                                                                         secao_id=sec_alvo, trecho_id=tid),
+                         "Trecho inserido no fim da seção.",
+                         ao_concluir=lambda _: st.session_state.pop(f"sec_{sec_alvo}", None))
+        st.page_link("paginas/biblioteca.py", label="Gerenciar a biblioteca", icon=":material/library_books:")
 
 # --------------------------------------------------------- revisão por IA
 if not emitido:
@@ -152,7 +176,8 @@ if not emitido:
             if st.button("Usar sugestão nesta seção", key=f"ia_usar_{sec_id}"):
                 st.session_state.pop(f"ia_rev_{sec_id}", None)
                 executar(lambda s: dc.salvar_secoes(s, documento_id, {sec_id: sugerido}),
-                         "Sugestão aplicada à seção (texto anterior guardado na auditoria).")
+                         "Sugestão aplicada à seção (texto anterior guardado na auditoria).",
+                         ao_concluir=lambda _: st.session_state.pop(f"sec_{sec_id}", None))  # recarrega o editor
 
 # ----------------------------------------------------------- checagem
 st.markdown("#### Verificação")
@@ -184,20 +209,31 @@ else:
                  ao_concluir=lambda novo: st.session_state.__setitem__("doc_sel", novo.id))
 
 # ------------------------------------------------------------ download
-st.markdown("#### Arquivo Word")
+st.markdown("#### Baixar o documento")
 nome_pessoa = st.text_input(
-    "Nome da pessoa avaliada (usado só para gerar este arquivo; não é gravado)",
+    "Nome da pessoa avaliada (usado só para gerar o arquivo; não é gravado)",
     key=f"nome_{documento_id}", type="default",
 )
 with transacao() as s:
     conteudo, final = dc.conteudo_para_exportar(s, documento_id)
-arquivo = gerar_docx(conteudo, final=final, nome_pessoa=nome_pessoa)
-st.download_button(
-    "Baixar documento final (.docx)" if final else "Baixar prévia com marca de RASCUNHO (.docx)",
-    arquivo, file_name=f"{info['codigo'].replace('/', '_')}{'' if final else '_RASCUNHO'}.docx",
-    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    on_click=lambda: st.session_state.__setitem__(f"nome_{documento_id}", ""),  # descarta o nome após baixar
+base = f"{info['codigo'].replace('/', '_')}{'' if final else '_RASCUNHO'}"
+
+
+def _descartar_nome():
+    st.session_state[f"nome_{documento_id}"] = ""  # descarta o nome após baixar
+
+
+b_pdf, b_doc = st.columns(2)
+b_pdf.download_button(
+    "Baixar PDF" if final else "Prévia em PDF (RASCUNHO)", gerar_pdf(conteudo, final=final, nome_pessoa=nome_pessoa),
+    file_name=f"{base}.pdf", mime="application/pdf", icon=":material/picture_as_pdf:", type="primary",
+    use_container_width=True, on_click=_descartar_nome,
 )
-st.caption("Para PDF: abra o arquivo no Word ou Pages e use “Exportar/Salvar como PDF”. Assine e rubrique "
-           "conforme a norma.")
+b_doc.download_button(
+    "Baixar Word (.docx)" if final else "Prévia em Word (RASCUNHO)", gerar_docx(conteudo, final=final, nome_pessoa=nome_pessoa),
+    file_name=f"{base}.docx", mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    icon=":material/description:", use_container_width=True, on_click=_descartar_nome,
+)
+st.caption("O PDF já sai pronto para assinatura (física ou digital, ex.: gov.br). Use o Word se precisar "
+           "ajustar a formatação. Assine e rubrique conforme a norma.")
 rodape()

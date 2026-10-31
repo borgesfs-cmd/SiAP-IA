@@ -125,3 +125,7 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 ## 20. AFC e restauração de backup (31/10/2026)
 **Usuário:** "vamos à próxima fase".
 **Entrega:** AFC própria por máxima verossimilhança, validada contra o lavaan com os dados de Holzinger & Swineford (1939), com resultados idênticos; restauração de backup pela tela, com validação, cópia prévia e confirmação. Interface da AFC com atalho a partir da AFE.
+
+## 21. Exportações e biblioteca (31/10/2026)
+**Usuário:** escolheu as quatro melhorias propostas: registro documental, PDF direto, biblioteca de modelos e frases, relatório de pesquisa em Word.
+**Entrega:** gerador único de documentos (Word/PDF) e as quatro funcionalidades; correção do editor após aplicar sugestão da IA. Migração 0006.

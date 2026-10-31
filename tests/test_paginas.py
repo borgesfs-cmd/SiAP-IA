@@ -6,7 +6,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 RAIZ = Path(__file__).resolve().parent.parent
-PAGINAS = ["paginas/inicio.py", "paginas/avaliacoes.py", "paginas/documentos.py", "paginas/qualitativo.py", "paginas/consultor_ia.py", "paginas/chave_api.py", "paginas/paineis.py", "paginas/pesquisa.py", "paginas/catalogo.py",
+PAGINAS = ["paginas/inicio.py", "paginas/avaliacoes.py", "paginas/documentos.py", "paginas/biblioteca.py", "paginas/qualitativo.py", "paginas/consultor_ia.py", "paginas/chave_api.py", "paginas/paineis.py", "paginas/pesquisa.py", "paginas/catalogo.py",
            "paginas/verificacao_satepsi.py", "paginas/finalidades.py", "paginas/auditoria_backup.py"]
 
 

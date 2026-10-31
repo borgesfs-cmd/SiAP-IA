@@ -7,6 +7,7 @@ from siap import avaliacoes as av
 from siap import catalogo, finalidades, satepsi
 from siap.models import Avaliacao
 from siap import documentos as dc
+from siap import registro_documental, render
 from siap.ui import data_br, estado_vazio, executar, iniciar_pagina, passos, rodape, selo, transacao
 
 iniciar_pagina("Avaliações", "Cada caso é identificado só por código. Registre entrevistas, testes aplicados e resultados.", "🗂️", ["Clique em **Nova avaliação**, escolha a finalidade e a faixa etária.", "Clique numa linha da lista para abrir a avaliação.", "Siga as etapas: **dados → entrevistas → instrumentos → documento**.", "Só aparecem testes **liberados no SATEPSI** para a finalidade escolhida.", "Ao terminar, clique em **Concluir avaliação**."])
@@ -140,6 +141,25 @@ with st.container(border=True):
                 executar(lambda s: av.alterar_status(s, avaliacao_id, av.CANCELADA), "Avaliação cancelada.")
         elif b1.button("Reabrir", icon=":material/lock_open:", use_container_width=True):
             executar(lambda s: av.alterar_status(s, avaliacao_id, av.EM_ANDAMENTO), "Avaliação reaberta.")
+
+    with acoes.popover("Registro documental", icon=":material/folder_open:", use_container_width=True):
+        st.caption("Tudo o que foi registrado nesta avaliação, num arquivo para guarda documental.")
+        nome_reg = st.text_input("Nome da pessoa (opcional; não é gravado)", key=f"nome_reg_{avaliacao_id}")
+        with transacao() as s:
+            doc_reg = registro_documental.montar(s, avaliacao_id)
+
+        def _baixou(formato):
+            with transacao() as s2:
+                registro_documental.registrar_exportacao(s2, avaliacao_id, formato)
+            st.session_state[f"nome_reg_{avaliacao_id}"] = ""
+
+        st.download_button("Baixar PDF", render.para_pdf(doc_reg, nome_reg), icon=":material/picture_as_pdf:",
+                           file_name=f"registro_{dados['codigo']}.pdf", mime="application/pdf", type="primary",
+                           use_container_width=True, on_click=_baixou, args=("pdf",))
+        st.download_button("Baixar Word", render.para_docx(doc_reg, nome_reg), icon=":material/description:",
+                           file_name=f"registro_{dados['codigo']}.docx", use_container_width=True,
+                           mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                           on_click=_baixou, args=("docx",))
 
     etapa = ("Dados" if not dados["demanda"] else "Entrevistas" if not registros else
              "Instrumentos" if not tem_resultados else "Documento" if not n_documentos else "")

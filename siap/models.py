@@ -347,3 +347,20 @@ class ConjuntoDados(Base):
     n_colunas: Mapped[int] = mapped_column(Integer)
     sha256: Mapped[str] = mapped_column(String(64))
     criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+
+
+class TrechoModelo(Base):
+    """Biblioteca de modelos e frases reutilizáveis para os documentos (textos da própria profissional)."""
+
+    __tablename__ = "trechos_modelo"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    titulo: Mapped[str] = mapped_column(String(120), unique=True)
+    categoria: Mapped[str] = mapped_column(String(60))
+    secao: Mapped[str] = mapped_column(String(40), default="qualquer")
+    texto: Mapped[str] = mapped_column(Text)
+    exemplo: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
+    usos: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+    atualizado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

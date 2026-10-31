@@ -39,6 +39,14 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
 
 | C. Estatística de pesquisa | ✅ | Conjuntos anonimizados (CSV/XLSX, checagem de identificadores), descritivas, alfa (IC Feldt) e ômega, análise de itens, AFE (eixos principais, varimax/promax, KMO, Bartlett, análise paralela), AFC (ML, validada contra lavaan), TRI 2PL e GRM (`girth`) |
 | D. Restauração de backup | ✅ | Aba Restaurar: validação, resumo, cópia prévia, confirmação digitada, restauração transacional |
+| E. Exportações e biblioteca | ✅ | PDF dos documentos; registro documental por avaliação (Word/PDF); biblioteca de modelos e frases; relatório de pesquisa APA (Word/PDF) |
+
+**Gerador de documentos (`siap/render.py`):** todo arquivo exportado é montado em blocos (`Titulo`, `Secao`,
+`Paragrafo`, `Lista`, `Tabela` APA, `Assinatura`…) e renderizado por `para_docx`/`para_pdf` (fpdf2 + Liberation Sans
+em `static/fontes`, licença OFL). O marcador de nome é substituído só ali. Novos relatórios devem usar esse módulo.
+`siap/registro_documental.py` (guarda documental), `siap/biblioteca.py` (trechos; inserção via `salvar_secoes`),
+`siap/relatorio_pesquisa.py` (APA: `num(..., sem_zero=True)` para estatísticas ≤ 1). Ao alterar o texto de uma
+seção fora do formulário do editor, remova `st.session_state[f"sec_{id}"]` para o editor recarregar.
 
 **AFC (`estatistica.afc`):** implementação própria por ML (estrutura simples, variância dos fatores = 1, divisor N,
 χ² = N·F como no lavaan); CFI, TLI, RMSEA (IC 90%), SRMR, EP pela informação esperada. Validada contra o lavaan com

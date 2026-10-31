@@ -6,6 +6,7 @@ import streamlit as st
 
 from siap import estatistica as es
 from siap import pesquisa as pq
+from siap import relatorio_pesquisa, render
 from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
 COR_1, COR_2 = "#2a78d6", "#eb6834"  # paleta de referência, slots 1 e 2
@@ -65,8 +66,9 @@ with transacao() as s:
     df = pq.carregar(s, cid)
 numericas = es.colunas_numericas(df)
 
-aba_dados, aba_desc, aba_prec, aba_afe, aba_afc, aba_tri = st.tabs(
-    ["Dados", "Descritivas", "Precisão (TCT)", "Análise fatorial (AFE)", "Confirmatória (AFC)", "TRI"])
+aba_dados, aba_desc, aba_prec, aba_afe, aba_afc, aba_tri, aba_rel = st.tabs(
+    ["Dados", "Descritivas", "Precisão (TCT)", "Análise fatorial (AFE)", "Confirmatória (AFC)", "TRI",
+     ":material/article: Relatório"])
 
 with aba_dados:
     st.caption(f"{info[2] or 'Sem descrição.'} · arquivo {info[6]} · importado em {data_br(info[5])}")
@@ -230,5 +232,44 @@ with aba_tri:
         st.dataframe(t.parametros.round(3), hide_index=True, width="stretch")
         baixar(t.parametros, f"parametros_{t.modelo}", f"b_tri_{cid}")
         mostrar_alertas(t.alertas)
+
+with aba_rel:
+    st.caption("Monte um relatório em Word ou PDF com as análises que você já rodou nesta sessão, em tabelas no "
+               "padrão APA (vírgula decimal, tabelas numeradas, notas e referências).")
+    disponiveis = {
+        "desc": ("Estatísticas descritivas", bool(st.session_state.get(f"desc_{cid}"))),
+        "prec": ("Precisão e análise de itens", f"res_prec_{cid}" in st.session_state),
+        "afe": ("Análise fatorial exploratória", f"res_afe_{cid}" in st.session_state),
+        "afc": ("Análise fatorial confirmatória", f"res_afc_{cid}" in st.session_state),
+        "tri": ("Teoria de Resposta ao Item", f"res_tri_{cid}" in st.session_state),
+    }
+    escolhidas = []
+    for chave_a, (rotulo, ok) in disponiveis.items():
+        if st.checkbox(rotulo if ok else f"{rotulo} — rode a análise na aba correspondente", value=ok, disabled=not ok,
+                       key=f"rel_{chave_a}_{cid}"):
+            escolhidas.append(chave_a)
+    if escolhidas:
+        try:
+            doc_rel = relatorio_pesquisa.montar(
+                conjunto=info[1], n_total=len(df),
+                descritivas=es.descritivas(df, st.session_state[f"desc_{cid}"]) if "desc" in escolhidas else None,
+                precisao=st.session_state.get(f"res_prec_{cid}") if "prec" in escolhidas else None,
+                afe=st.session_state.get(f"res_afe_{cid}") if "afe" in escolhidas else None,
+                rotacao_afe=st.session_state.get(f"rot_{cid}") or "promax",
+                afc=st.session_state.get(f"res_afc_{cid}") if "afc" in escolhidas else None,
+                tri=st.session_state.get(f"res_tri_{cid}") if "tri" in escolhidas else None,
+            )
+        except es.ErroValidacao as erro:
+            st.error(str(erro))
+        else:
+            r1, r2 = st.columns(2)
+            nome_arq = "relatorio_" + "".join(ch if ch.isalnum() else "_" for ch in info[1])[:40]
+            r1.download_button("Baixar Word (.docx)", render.para_docx(doc_rel), file_name=f"{nome_arq}.docx",
+                               mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                               icon=":material/description:", type="primary", use_container_width=True)
+            r2.download_button("Baixar PDF", render.para_pdf(doc_rel), file_name=f"{nome_arq}.pdf",
+                               mime="application/pdf", icon=":material/picture_as_pdf:", use_container_width=True)
+    else:
+        st.info("Rode ao menos uma análise para gerar o relatório.", icon=":material/info:")
 
 rodape()
