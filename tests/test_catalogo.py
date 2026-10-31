@@ -194,6 +194,12 @@ def test_url_de_banco_invalida_gera_mensagem_clara(url):
         criar_engine(normalizar_url(url))
 
 
+def test_localhost_e_aceito_pela_validacao():
+    from siap.db import validar_url
+
+    validar_url("postgresql+psycopg://u:p@localhost:5432/db")
+
+
 def test_banco_inacessivel_gera_mensagem_clara():
     from siap.db import ConfiguracaoBancoInvalida
 

@@ -105,3 +105,7 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 - Corrigido: mensagem clara quando `DATABASE_URL` está inválida (o texto de exemplo do guia causava `UnicodeEncodeError`).
 - **Etapa 4 — Documentos:** usuário pediu a próxima etapa sem modelo próprio, então foi usada a estrutura da Res. CFP 06/2019.
 - **Decisão do usuário:** a forma de tratar o nome da pessoa avaliada (digitado só no download, nunca gravado) passa a ser **instrução do sistema**, registrada no CLAUDE.md, no Documento Mestre (7-A) e na página Documentos.
+
+## 16. Pós-MVP A (31/10/2026)
+**Usuário:** "vamos aos próximos passos".
+**Entrega:** Consultor IA (consultor metodológico, revisão de redação de documentos, sugestão de códigos), com consentimento, pseudonimização, filtro de instrumentos elegíveis, validação de trechos literais e alerta de números novos; Análise qualitativa (livro de códigos, codificação, matriz, evidências). Migração 0003.

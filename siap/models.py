@@ -241,6 +241,9 @@ class PerfilProfissional(Base):
     titulacao: Mapped[str] = mapped_column(String(200), default="")
     cidade_uf: Mapped[str] = mapped_column(String(120), default="")
     atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+    # Consultor IA: desligado até consentimento explícito do usuário.
+    ia_habilitada: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    ia_consentimento_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class DocumentoPsicologico(Base):
@@ -286,3 +289,32 @@ class SecaoDocumento(Base):
     editado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     documento: Mapped[DocumentoPsicologico] = relationship(back_populates="secoes")
+
+
+class CodigoQualitativo(Base):
+    """Código/categoria do livro de códigos da análise qualitativa (global, reutilizável)."""
+
+    __tablename__ = "codigos_qualitativos"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    descricao: Mapped[str] = mapped_column(Text, default="")
+    ativo: Mapped[bool] = mapped_column(Boolean, default=True)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+
+
+class Codificacao(Base):
+    """Trecho literal de um registro (entrevista/observação) associado a um código."""
+
+    __tablename__ = "codificacoes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    registro_id: Mapped[int] = mapped_column(ForeignKey("registros_avaliacao.id"))
+    codigo_id: Mapped[int] = mapped_column(ForeignKey("codigos_qualitativos.id"))
+    trecho: Mapped[str] = mapped_column(Text)
+    comentario: Mapped[str] = mapped_column(Text, default="")
+    origem: Mapped[str] = mapped_column(String(20), default="manual")  # manual | ia_aceita
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+
+    registro: Mapped[RegistroAvaliacao] = relationship()
+    codigo: Mapped[CodigoQualitativo] = relationship()

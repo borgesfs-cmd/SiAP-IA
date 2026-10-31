@@ -1,7 +1,11 @@
-# SIAP-IA — Documento Mestre v1.3
+# SIAP-IA — Documento Mestre v1.4
 
-**Versão 1.3 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.4 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.4 (Pós-MVP A)
+- **Consultor IA** (API do Claude): consultor metodológico, revisão de redação de seções de documentos e sugestão de códigos qualitativos. Fica desligado por padrão; ativa-se com termo de consentimento e chave `ANTHROPIC_API_KEY`. O texto é pseudonimizado, as respostas são só sugestões, números novos são sinalizados e a auditoria guarda apenas metadados.
+- **Análise qualitativa:** livro de códigos com definição operacional, codificação de trechos literais (manual ou sugestão da IA aceita), matriz código × registro e evidências por código.
 
 ## v1.3 (Etapa 4)
 - Documentos psicológicos implementados (laudo, atestado, relatório, parecer, declaração), com fluxo de aprovação, emissão com SHA-256, retificação e exportação .docx.
@@ -47,7 +51,7 @@ SIAP-IA: apoio ao trabalho de avaliação psicológica em psicodiagnóstico adul
 | 2. Catálogo + SATEPSI | Instrumentos/versões, verificação com evidência e validade, bloqueio, backup | ✅ concluída |
 | 3. Avaliações | Finalidades (padrão + manuais), caso codificado, entrevistas e observações, instrumentos aplicados (somente versões elegíveis para a finalidade), resultados transcritos, alertas de conformidade | ✅ concluída |
 | 4. Documentos | Laudo, atestado, relatório, parecer e declaração; rascunho → revisado → aprovado → emitido; retificação; .docx; SHA-256 | ✅ concluída |
-| Pós-MVP A | Consultor IA metodológico e de redação; análise qualitativa (codificação, matrizes, evidências) | — |
+| Pós-MVP A | Consultor IA metodológico e de redação; análise qualitativa (codificação, matrizes, evidências) | ✅ concluída |
 | Pós-MVP B | Dashboards | — |
 | Pós-MVP C | Estatística de pesquisa: descritivas, TCT, precisão, AFE/AFC, TRI, normas de estudos próprios | — |
 
@@ -114,7 +118,7 @@ Essa regra está no `CLAUDE.md` (regra 4) e aparece como instrução fixa na pá
 | Toda alteração gera auditoria; histórico SATEPSI preservado | ✅ testado |
 | Backup integral exportável | ✅ testado (restauração automatizada: pendente) |
 | Resultados psicométricos reproduzem bases de referência | pós-MVP C |
-| IA não cria valores numéricos e distingue cálculo de interpretação | pós-MVP A |
+| IA não cria valores numéricos e distingue cálculo de interpretação | ✅ números novos sinalizados; respostas rotuladas como sugestão |
 | Documentos permanecem rascunho até aprovação | ✅ testado |
 | Nenhum dado de identificação direta é coletado | regra de projeto (CLAUDE.md) |
 

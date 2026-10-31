@@ -4,6 +4,7 @@ import streamlit as st
 
 from siap import avaliacoes as av
 from siap import documentos as dc
+from siap import ia
 from siap.exportar_docx import gerar_docx
 from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
@@ -89,6 +90,8 @@ with transacao() as s:
     info["substituido_por"] = sucessor.codigo if sucessor else None
     secoes = [(sec.id, sec.titulo, sec.conteudo, sec.obrigatoria) for sec in d.secoes]
     checagem = dc.checar(s, documento_id)
+    dados_registrados = dc.resumo_dados_registrados(d.avaliacao)
+    ia_ok, ia_motivo = ia.situacao(s)
 
 st.divider()
 st.subheader(f"{info['titulo']} — {info['codigo']}")
@@ -109,6 +112,42 @@ with st.form(f"secoes_{documento_id}"):
 if salvar:
     executar(lambda s: dc.salvar_secoes(s, documento_id, novos),
              "Texto salvo." + (" O documento voltou a rascunho." if info["status"] in (dc.REVISADO, dc.APROVADO) else ""))
+
+# --------------------------------------------------------- revisão por IA
+if not emitido:
+    with st.expander("💡 Revisar redação com o Consultor IA"):
+        if not ia_ok:
+            st.info(ia_motivo)
+        rot_sec = {sid: titulo for sid, titulo, _, _ in secoes}
+        sec_id = st.selectbox("Seção", list(rot_sec), format_func=rot_sec.get, key=f"ia_sec_{documento_id}")
+        st.caption("Envia a seção e os dados registrados da avaliação, pseudonimizados. A sugestão só substitui "
+                   "o texto se você clicar em “Usar sugestão”.")
+        if st.button("Pedir revisão", disabled=not ia_ok, key=f"ia_rev_{documento_id}"):
+            texto_atual = next(c for sid, _, c, _ in secoes if sid == sec_id)
+            with st.spinner("Revisando…"):
+                try:
+                    with transacao() as s:
+                        st.session_state[f"ia_rev_{sec_id}"] = ia.revisar_secao(
+                            s, tipo_documento=info["titulo"], titulo_secao=rot_sec[sec_id], texto=texto_atual,
+                            dados_registrados=dados_registrados)
+                except ia.ErroIA as erro:
+                    st.error(str(erro))
+        rev = st.session_state.get(f"ia_rev_{sec_id}")
+        if rev:
+            st.markdown("**Texto sugerido** (o marcador de nome volta ao formato do sistema ao usar):")
+            sugerido = rev.dados.texto_sugerido.replace("[PESSOA AVALIADA]", dc.TOKEN_NOME)
+            st.text_area("Sugestão", sugerido, height=220, disabled=True, key=f"ia_txt_{sec_id}")
+            for o in rev.dados.observacoes:
+                st.caption(f"📝 {o}")
+            for a in rev.dados.alertas:
+                st.warning(a)
+            if rev.numeros_nao_encontrados:
+                st.warning("Números na sugestão que não constam do texto nem dos dados registrados: "
+                           + ", ".join(rev.numeros_nao_encontrados) + ". Confira antes de usar.")
+            if st.button("Usar sugestão nesta seção", key=f"ia_usar_{sec_id}"):
+                st.session_state.pop(f"ia_rev_{sec_id}", None)
+                executar(lambda s: dc.salvar_secoes(s, documento_id, {sec_id: sugerido}),
+                         "Sugestão aplicada à seção (texto anterior guardado na auditoria).")
 
 # ----------------------------------------------------------- checagem
 st.markdown("#### Verificação")

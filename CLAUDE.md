@@ -33,8 +33,16 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
 | 3. Avaliações | ✅ | Finalidades (padrão + manuais), caso codificado, entrevistas/observações, instrumentos aplicados (só versões elegíveis **para a finalidade**), resultados transcritos, alertas |
 | 4. Documentos | ✅ | Laudo, atestado, relatório, parecer e declaração (estrutura Res. CFP 06/2019); rascunho só com dados registrados; marcadores `[[...]]` bloqueiam aprovação; rascunho→revisado→aprovado (confirmação de autoria)→emitido (conteúdo congelado + SHA-256); retificação; `.docx` |
 
-Pós-MVP: consultor IA (API do Claude, texto pseudonimizado) e análise qualitativa → dashboards →
-estatística de pesquisa (TCT, AFE/AFC, TRI; depois R via `Rscript`).
+| A. Consultor IA + qualitativa | ✅ | Consultor metodológico, revisão de redação, sugestão de códigos (API do Claude, `claude-opus-5-5`, structured outputs, fallback de recusa); livro de códigos, codificação de trechos literais, matriz e evidências |
+
+Próximos: dashboards → estatística de pesquisa (TCT, AFE/AFC, TRI; depois R via `Rscript`).
+
+**Consultor IA (`siap/ia.py`):** desligado até consentimento (perfil.ia_habilitada) + `ANTHROPIC_API_KEY` nos Secrets.
+Todo envio passa por `ia.pseudonimizar` (nome→[PESSOA AVALIADA], código→[CASO], CPF/e-mail/telefone→[REMOVIDO]).
+Saídas são sugestões: nada é gravado sem clique da profissional. Instrumentos sugeridos são filtrados pela lista de
+elegíveis (SATEPSI + finalidade). Trechos sugeridos para codificação só valem se forem literais. Números novos na
+resposta são sinalizados. A auditoria guarda só metadados (função, modelo, tokens). Testes usam cliente falso —
+nunca chamar a API real nos testes.
 **Fora do escopo por decisão do usuário:** aprendizado de máquina; funcionalidades comerciais.
 
 Finalidades: padrões (Psicodiagnóstico, Avaliação neuropsicológica, Trânsito, Porte/posse de arma, Seleção,
@@ -49,6 +57,7 @@ Avaliação concluída/cancelada é somente leitura até ser reaberta.
 - `siap/models.py` — tabelas; `siap/satepsi.py` — regra pura; `siap/catalogo.py` — catálogo, SATEPSI, auditoria, backup;
   `siap/finalidades.py`; `siap/avaliacoes.py` — avaliações + filtro de identificadores (CPF/e-mail/telefone);
   `siap/documentos.py` — documentos e fluxo; `siap/exportar_docx.py` — geração do Word;
+  `siap/ia.py` — consultor IA; `siap/qualitativo.py` — análise qualitativa;
   `siap/inventario.py` — inventário inicial; `siap/db.py` — conexão + migrações; `siap/ui.py` — utilidades de tela
   (`executar` para ações de formulário).
 - `siap/migracoes/` — Alembic. Aplicadas automaticamente ao abrir o app.

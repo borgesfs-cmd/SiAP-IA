@@ -49,7 +49,7 @@ def validar_url(url: str) -> None:
     except ArgumentError:
         raise ConfiguracaoBancoInvalida("O endereço do banco (DATABASE_URL) não está num formato válido. " + _AJUDA)
     host = partes.host or ""
-    if (not partes.drivername.startswith("postgresql") or not host or "." not in host
+    if (not partes.drivername.startswith("postgresql") or not host or ("." not in host and host != "localhost")
             or ".." in host or host.startswith(".") or " " in url or not partes.username):
         raise ConfiguracaoBancoInvalida(
             "O endereço do banco (DATABASE_URL) parece ser o texto de exemplo ou está incompleto. " + _AJUDA

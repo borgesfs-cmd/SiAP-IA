@@ -394,3 +394,26 @@ def conteudo_para_exportar(s: Session, documento_id: int) -> tuple[dict, bool]:
     conteudo = _conteudo_canonico(doc, perfil, hoje())
     conteudo["hash"] = None
     return conteudo, False
+
+
+def resumo_dados_registrados(a: Avaliacao) -> str:
+    """Dados factuais da avaliação (para conferência pela IA). Sem nomes: só código e registros."""
+    linhas = [f"Finalidade: {a.finalidade.nome}", f"Faixa etária: {a.faixa_etaria}"]
+    if a.idade is not None:
+        linhas.append(f"Idade: {a.idade} anos")
+    if a.escolaridade:
+        linhas.append(f"Escolaridade: {a.escolaridade}")
+    if a.contexto:
+        linhas.append(f"Contexto/solicitante: {a.contexto}")
+    if a.demanda:
+        linhas.append(f"Demanda: {a.demanda}")
+    for r in a.registros:
+        linhas.append(f"[{r.data:%d/%m/%Y}] {r.tipo}: {r.conteudo}")
+    for ap in a.aplicacoes:
+        linhas.append(f"Instrumento: {ap.versao.rotulo}, aplicado em {ap.data_aplicacao:%d/%m/%Y} ({ap.modalidade})")
+        for r in ap.resultados:
+            valores = "; ".join(f"{rot} {v}" for rot, v in (
+                ("escore bruto", r.escore_bruto), ("escore padronizado", r.escore_padrao),
+                ("percentil", r.percentil), ("classificação", r.classificacao)) if v)
+            linhas.append(f"  - {r.medida}: {valores} (ref.: {r.referencia})")
+    return "\n".join(linhas)

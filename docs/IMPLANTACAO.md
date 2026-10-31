@@ -38,6 +38,11 @@ precisa ficar fora dele. Sem `DATABASE_URL`, o app usa SQLite e serve só para t
 5. Depois de publicado: **Settings → Sharing** → deixe o app **privado** e convide só o seu e-mail.
    Ficam duas camadas de acesso: o login do Streamlit e a senha do app.
 
+## Ativar o Consultor IA (opcional)
+1. Crie uma chave em <https://console.anthropic.com> → **API keys**. O uso é cobrado pela Anthropic; defina um limite de gastos no console.
+2. No Streamlit, em **Settings → Secrets**, acrescente uma linha: `ANTHROPIC_API_KEY = "sua-chave"`.
+3. No app, abra **Consultor IA**, leia o termo, marque a concordância e clique em **Ativar**.
+
 ## Se aparecer erro
 - **"Banco de dados não configurado corretamente"** (ou `UnicodeEncodeError … idna`): a `DATABASE_URL` está com o texto de exemplo, incompleta ou com espaços. No Streamlit, abra **Manage app → ⋮ → Settings → Secrets**, cole a connection string do Neon entre aspas e salve. O app reinicia sozinho.
 - **"Não foi possível conectar"**: confira se o projeto no Neon existe e se a string foi copiada inteira, incluindo `?sslmode=require`.
