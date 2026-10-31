@@ -1,0 +1,9 @@
+[project]
+name = "siap-ia"
+version = "0.2.0"
+description = "SIAP-IA — Sistema Inteligente de Avaliação Psicológica (uso pessoal, não comercial)"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
