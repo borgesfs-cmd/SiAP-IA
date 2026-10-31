@@ -1,7 +1,11 @@
-# SIAP-IA — Documento Mestre v1.2
+# SIAP-IA — Documento Mestre v1.3
 
-**Versão 1.2 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.3 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.3 (Etapa 4)
+- Documentos psicológicos implementados (laudo, atestado, relatório, parecer, declaração), com fluxo de aprovação, emissão com SHA-256, retificação e exportação .docx.
+- **Regra do nome da pessoa avaliada** formalizada (seção 7-A) e exibida como instrução fixa no sistema.
 
 ## v1.2 (Etapa 3)
 - Finalidades: Psicodiagnóstico e Avaliação neuropsicológica incluídas entre as padrão; **inclusão manual de outras finalidades**.
@@ -42,7 +46,7 @@ SIAP-IA: apoio ao trabalho de avaliação psicológica em psicodiagnóstico adul
 | 1. Base | Repositório, app, banco, auditoria, testes, CI, implantação em nuvem | ✅ concluída |
 | 2. Catálogo + SATEPSI | Instrumentos/versões, verificação com evidência e validade, bloqueio, backup | ✅ concluída |
 | 3. Avaliações | Finalidades (padrão + manuais), caso codificado, entrevistas e observações, instrumentos aplicados (somente versões elegíveis para a finalidade), resultados transcritos, alertas de conformidade | ✅ concluída |
-| 4. Documentos | Laudo e atestado (Res. CFP 06/2019), relatório, declaração e parecer; rascunho → revisado → aprovado → emitido; exportação Word/PDF; hash | próxima |
+| 4. Documentos | Laudo, atestado, relatório, parecer e declaração; rascunho → revisado → aprovado → emitido; retificação; .docx; SHA-256 | ✅ concluída |
 | Pós-MVP A | Consultor IA metodológico e de redação; análise qualitativa (codificação, matrizes, evidências) | — |
 | Pós-MVP B | Dashboards | — |
 | Pós-MVP C | Estatística de pesquisa: descritivas, TCT, precisão, AFE/AFC, TRI, normas de estudos próprios | — |
@@ -75,8 +79,32 @@ SIAP-IA: apoio ao trabalho de avaliação psicológica em psicodiagnóstico adul
 - Resultados: medida, escore bruto, escore padronizado, percentil, classificação e **referência obrigatória** (manual/tabela/plataforma). O sistema não calcula normas.
 - Privacidade: textos com padrão de CPF, e-mail ou telefone são recusados. Nomes próprios não são detectáveis automaticamente.
 
-## 7. Documentação psicológica (Etapa 4)
-Fluxo: selecionar avaliação → reunir evidências pertinentes → rascunho → checagem de consistência e requisitos → revisão e aprovação profissional → exportar Word/PDF → arquivar com hash. Adequar à Resolução CFP 06/2019 e às normas vigentes, conferidas antes do uso real. Inclui o prazo de guarda documental exigido pelo CFP.
+## 7. Documentação psicológica (Etapa 4, implementada)
+- Tipos e seções (estrutura baseada na Res. CFP 06/2019; conferir com a versão vigente antes do uso real):
+  - **Laudo:** identificação, descrição da demanda, procedimento, análise, conclusão, referências (obrigatórias).
+  - **Relatório:** identificação, demanda, procedimento, análise, conclusão (referências opcionais).
+  - **Parecer:** identificação, demanda, análise, conclusão, referências.
+  - **Atestado:** identificação e texto.
+  - **Declaração:** texto com informações objetivas (alerta se mencionar diagnóstico, sintomas ou CID).
+- O rascunho é montado **só com dados registrados**: demanda, procedimentos com datas, resultados transcritos e referências informadas. **Análise e conclusão são redigidas pela(o) profissional.** O sistema não interpreta nem conclui.
+- Trechos `[[...]]` indicam o que falta completar e **bloqueiam a aprovação**.
+- Fluxo: **rascunho → revisado → aprovado → emitido**.
+  - A aprovação exige confirmar a revisão integral e a autoria técnica.
+  - Editar um documento revisado ou aprovado devolve-o a rascunho.
+  - A emissão congela o conteúdo e grava um SHA-256, impresso no rodapé.
+  - Documento emitido não muda: corrige-se por **retificação** (novo documento que referencia o anterior).
+- Exportação `.docx`: Arial 12, numeração "Página X de Y", local e data por extenso, bloco de assinatura com CRP. Prévias saem com a marca "RASCUNHO". Para PDF, usar "Exportar como PDF" no Word ou no Pages.
+- Dados profissionais (nome, CRP, titulação, cidade) ficam num perfil único.
+
+## 7-A. Regra do nome da pessoa avaliada (instrução do sistema)
+1. O SIAP-IA **não grava** o nome de quem é avaliado. Nos textos dos documentos aparece o marcador `{{NOME DA PESSOA AVALIADA}}`.
+2. O nome é digitado **apenas no momento de baixar o arquivo Word** e substitui o marcador **somente no arquivo gerado**.
+3. Depois do download, o campo é **apagado automaticamente**. O nome não vai para banco, backup, auditoria, hash nem serviço externo.
+4. Para baixar de novo, digita-se o nome outra vez. Sem nome, o marcador sai destacado em vermelho para preenchimento no Word.
+5. Nunca escrever nome, CPF, telefone ou e-mail dentro das seções. CPF, e-mail e telefone são recusados automaticamente.
+6. A guarda do documento final assinado e da correspondência código ↔ pessoa é responsabilidade da(o) profissional, **fora do sistema**, pelo prazo exigido pelo CFP.
+
+Essa regra está no `CLAUDE.md` (regra 4) e aparece como instrução fixa na página **Documentos**.
 
 ## 8. Critérios de aceitação
 | Critério | Situação |
@@ -87,7 +115,7 @@ Fluxo: selecionar avaliação → reunir evidências pertinentes → rascunho �
 | Backup integral exportável | ✅ testado (restauração automatizada: pendente) |
 | Resultados psicométricos reproduzem bases de referência | pós-MVP C |
 | IA não cria valores numéricos e distingue cálculo de interpretação | pós-MVP A |
-| Documentos permanecem rascunho até aprovação | Etapa 4 |
+| Documentos permanecem rascunho até aprovação | ✅ testado |
 | Nenhum dado de identificação direta é coletado | regra de projeto (CLAUDE.md) |
 
 ## 9. Pendências

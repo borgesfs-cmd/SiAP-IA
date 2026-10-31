@@ -99,3 +99,9 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 ## 14. Etapa 3 (31/10/2026)
 **Usuário:** pediu incluir **Psicodiagnóstico** e **Avaliação neuropsicológica** entre as finalidades, permitir **incluir outras finalidades manualmente** e seguir para a Etapa 3.
 **Entrega:** finalidades (padrão + manuais, desativáveis), verificação SATEPSI por finalidade, avaliações codificadas, entrevistas/observações, instrumentos aplicados com bloqueio por finalidade, resultados transcritos com referência, alertas de conformidade, filtro de identificadores e migrações Alembic.
+
+## 15. Implantação e Etapa 4 (31/10/2026)
+- Repositório `borgesfs-cmd/SiAP-IA` criado pelo usuário; código publicado; app implantado no Streamlit Cloud com banco Neon.
+- Corrigido: mensagem clara quando `DATABASE_URL` está inválida (o texto de exemplo do guia causava `UnicodeEncodeError`).
+- **Etapa 4 — Documentos:** usuário pediu a próxima etapa sem modelo próprio, então foi usada a estrutura da Res. CFP 06/2019.
+- **Decisão do usuário:** a forma de tratar o nome da pessoa avaliada (digitado só no download, nunca gravado) passa a ser **instrução do sistema**, registrada no CLAUDE.md, no Documento Mestre (7-A) e na página Documentos.

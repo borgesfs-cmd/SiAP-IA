@@ -13,6 +13,11 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
    Correção = nova verificação. Toda alteração de dados chama `auditar(...)` na mesma transação.
 4. **Sem identificação direta de pessoas avaliadas.** Nunca criar campos de nome, CPF, RG, endereço,
    telefone, e-mail ou foto de avaliando. Usar código (ex.: `AV-2026-001`). Datas de nascimento: preferir idade.
+   **Nome em documentos psicológicos:** nos textos usa-se sempre o marcador `{{NOME DA PESSOA AVALIADA}}`
+   (`siap.documentos.TOKEN_NOME`). O nome real é digitado só no momento de baixar o `.docx`, substitui o marcador
+   apenas no arquivo gerado (`siap.exportar_docx.gerar_docx`) e é descartado: nunca vai para banco, backup,
+   auditoria, logs, hash ou API externa. Para baixar de novo, digita-se outra vez. Não criar nenhum recurso que
+   memorize esse nome (nem "lembrar último nome"). A página Documentos exibe essa instrução ao usuário.
 5. **Nada de material protegido:** não implementar itens, estímulos, manuais, tabelas normativas ou chaves
    de correção de testes comerciais. Resultados clínicos são *registrados* a partir do manual/plataforma
    oficial (escore bruto, percentil, classificação + referência), não *calculados* pelo sistema.
@@ -26,7 +31,7 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
 | 1. Base | ✅ | Streamlit, SQLAlchemy (SQLite local / PostgreSQL na nuvem), auditoria, testes, CI |
 | 2. Catálogo + SATEPSI | ✅ | Instrumentos, versões, verificação assistida com evidência e validade, bloqueio |
 | 3. Avaliações | ✅ | Finalidades (padrão + manuais), caso codificado, entrevistas/observações, instrumentos aplicados (só versões elegíveis **para a finalidade**), resultados transcritos, alertas |
-| 4. Documentos | próxima | Laudo e atestado (Res. CFP 06/2019) via modelos `.docx` (docxtpl), fluxo rascunho→revisado→aprovado→emitido, hash |
+| 4. Documentos | ✅ | Laudo, atestado, relatório, parecer e declaração (estrutura Res. CFP 06/2019); rascunho só com dados registrados; marcadores `[[...]]` bloqueiam aprovação; rascunho→revisado→aprovado (confirmação de autoria)→emitido (conteúdo congelado + SHA-256); retificação; `.docx` |
 
 Pós-MVP: consultor IA (API do Claude, texto pseudonimizado) e análise qualitativa → dashboards →
 estatística de pesquisa (TCT, AFE/AFC, TRI; depois R via `Rscript`).
@@ -43,6 +48,7 @@ Avaliação concluída/cancelada é somente leitura até ser reaberta.
 - `paginas/` — telas Streamlit (sem regra de negócio).
 - `siap/models.py` — tabelas; `siap/satepsi.py` — regra pura; `siap/catalogo.py` — catálogo, SATEPSI, auditoria, backup;
   `siap/finalidades.py`; `siap/avaliacoes.py` — avaliações + filtro de identificadores (CPF/e-mail/telefone);
+  `siap/documentos.py` — documentos e fluxo; `siap/exportar_docx.py` — geração do Word;
   `siap/inventario.py` — inventário inicial; `siap/db.py` — conexão + migrações; `siap/ui.py` — utilidades de tela
   (`executar` para ações de formulário).
 - `siap/migracoes/` — Alembic. Aplicadas automaticamente ao abrir o app.

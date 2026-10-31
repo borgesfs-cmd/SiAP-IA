@@ -10,6 +10,7 @@ exigir_acesso()
 st.navigation([
     st.Page("paginas/panorama.py", title="Panorama", icon="🏠", default=True),
     st.Page("paginas/avaliacoes.py", title="Avaliações", icon="🗒️"),
+    st.Page("paginas/documentos.py", title="Documentos", icon="📄"),
     st.Page("paginas/catalogo.py", title="Catálogo de testes", icon="📚"),
     st.Page("paginas/verificacao_satepsi.py", title="Verificação SATEPSI", icon="✅"),
     st.Page("paginas/finalidades.py", title="Finalidades", icon="🎯"),

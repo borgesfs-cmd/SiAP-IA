@@ -2,7 +2,8 @@
 
 **Sistema Inteligente de Avaliação Psicológica** — uso pessoal e não comercial.
 
-Versão atual: **Etapas 1, 2 e 3 do MVP**
+Versão atual: **MVP completo (Etapas 1 a 4)**
+- **Documentos psicológicos:** laudo, atestado, relatório, parecer e declaração (estrutura da Res. CFP 06/2019). Rascunho montado com os dados da avaliação, aprovação com confirmação de autoria, emissão com código de integridade (SHA-256), retificação e arquivo Word. **O nome da pessoa avaliada é digitado só na hora de baixar o arquivo e nunca é gravado.**
 - **Avaliações:** caso identificado só por código (AV-AAAA-NNN), finalidade, perfil (faixa etária, idade, escolaridade), demanda, entrevistas/observações, instrumentos aplicados e resultados transcritos do manual. O sistema recusa textos com CPF, e-mail ou telefone.
 - **Finalidades:** Psicodiagnóstico, Avaliação neuropsicológica, Trânsito, Porte/posse de arma, Seleção, Treinamento e Pesquisa, além das que você incluir.
 - **Catálogo de testes:** cadastro, versões independentes (ex.: d2 e d2-R), busca e edição com histórico.

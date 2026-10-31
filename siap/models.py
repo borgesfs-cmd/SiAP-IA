@@ -228,3 +228,61 @@ class ResultadoRegistrado(Base):
     editado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     aplicacao: Mapped[AplicacaoInstrumento] = relationship(back_populates="resultados")
+
+
+class PerfilProfissional(Base):
+    """Dados da(o) psicóloga(o) autora(or) dos documentos (registro único, id=1)."""
+
+    __tablename__ = "perfil_profissional"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(200), default="")
+    crp: Mapped[str] = mapped_column(String(30), default="")
+    titulacao: Mapped[str] = mapped_column(String(200), default="")
+    cidade_uf: Mapped[str] = mapped_column(String(120), default="")
+    atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+
+
+class DocumentoPsicologico(Base):
+    """Documento psicológico (Res. CFP 06/2019). Rascunho → revisado → aprovado → emitido.
+
+    O nome da pessoa avaliada NUNCA é gravado: é informado só ao gerar o arquivo .docx.
+    """
+
+    __tablename__ = "documentos"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    avaliacao_id: Mapped[int] = mapped_column(ForeignKey("avaliacoes.id"))
+    codigo: Mapped[str] = mapped_column(String(40), unique=True)
+    tipo: Mapped[str] = mapped_column(String(20))
+    titulo: Mapped[str] = mapped_column(String(120))
+    status: Mapped[str] = mapped_column(String(20), default="rascunho")
+    substitui_id: Mapped[int | None] = mapped_column(ForeignKey("documentos.id"), nullable=True)
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+    aprovado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    emitido_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    data_emissao: Mapped[date | None] = mapped_column(Date, nullable=True)
+    # Fotografia imutável do conteúdo emitido (JSON) e seu SHA-256.
+    conteudo_emitido: Mapped[str | None] = mapped_column(Text, nullable=True)
+    hash_conteudo: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    avaliacao: Mapped[Avaliacao] = relationship()
+    secoes: Mapped[list[SecaoDocumento]] = relationship(
+        back_populates="documento", order_by="SecaoDocumento.ordem"
+    )
+
+
+class SecaoDocumento(Base):
+    __tablename__ = "secoes_documento"
+    __table_args__ = (UniqueConstraint("documento_id", "chave"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    documento_id: Mapped[int] = mapped_column(ForeignKey("documentos.id"))
+    chave: Mapped[str] = mapped_column(String(40))
+    titulo: Mapped[str] = mapped_column(String(120))
+    ordem: Mapped[int] = mapped_column(Integer)
+    obrigatoria: Mapped[bool] = mapped_column(Boolean, default=True)
+    conteudo: Mapped[str] = mapped_column(Text, default="")
+    editado_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    documento: Mapped[DocumentoPsicologico] = relationship(back_populates="secoes")
