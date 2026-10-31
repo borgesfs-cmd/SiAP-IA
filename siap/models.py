@@ -331,3 +331,19 @@ class SegredoCifrado(Base):
     sal: Mapped[str] = mapped_column(String(64))
     final: Mapped[str] = mapped_column(String(8), default="")  # últimos caracteres, para exibir mascarado
     atualizado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)
+
+
+class ConjuntoDados(Base):
+    """Base de dados de pesquisa ANONIMIZADA importada (CSV/XLSX), guardada como CSV normalizado."""
+
+    __tablename__ = "conjuntos_dados"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    nome: Mapped[str] = mapped_column(String(120), unique=True)
+    descricao: Mapped[str] = mapped_column(Text, default="")
+    arquivo_original: Mapped[str] = mapped_column(String(200), default="")
+    conteudo_csv: Mapped[str] = mapped_column(Text, deferred=True)
+    n_linhas: Mapped[int] = mapped_column(Integer)
+    n_colunas: Mapped[int] = mapped_column(Integer)
+    sha256: Mapped[str] = mapped_column(String(64))
+    criado_em: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=agora_utc)

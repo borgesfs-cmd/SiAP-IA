@@ -13,6 +13,7 @@ st.navigation([
     st.Page("paginas/avaliacoes.py", title="Avaliações", icon="🗒️"),
     st.Page("paginas/documentos.py", title="Documentos", icon="📄"),
     st.Page("paginas/qualitativo.py", title="Análise qualitativa", icon="🧩"),
+    st.Page("paginas/pesquisa.py", title="Pesquisa (estatística)", icon="📐"),
     st.Page("paginas/consultor_ia.py", title="Consultor IA", icon="💡"),
     st.Page("paginas/chave_api.py", title="Chave da API", icon="🔑"),
     st.Page("paginas/catalogo.py", title="Catálogo de testes", icon="📚"),

@@ -37,7 +37,15 @@ Leia `docs/DOCUMENTO_MESTRE.md` antes de propor mudanças de escopo. Histórico 
 
 | B. Painéis | ✅ | Visão geral (contagens, mês, finalidade, instrumentos, SATEPSI, vencimentos), avaliação individual (percentis transcritos + linha do tempo), comparativo entre avaliações; Altair, cor única, tabela em cada gráfico |
 
-Próximo: estatística de pesquisa (descritivas, alfa/ômega, AFE/AFC, TRI; depois R via `Rscript`).
+| C. Estatística de pesquisa | ✅ | Conjuntos anonimizados (CSV/XLSX, checagem de identificadores), descritivas, alfa (IC Feldt) e ômega, análise de itens, AFE (eixos principais, varimax/promax, KMO, Bartlett, análise paralela), TRI 2PL e GRM (`girth`) |
+
+Pendente (fora do MVP): AFC — `semopy` não compila de forma confiável; fazer depois via R (`lavaan`, `Rscript`) ou
+outra biblioteca validada.
+
+**Estatística (`siap/estatistica.py`):** implementação própria de PAF, varimax, promax (como `stats::promax`), KMO,
+Bartlett e análise paralela — NÃO reintroduzir `factor_analyzer` (incompatível com scikit-learn ≥ 1.8). Toda rotina
+nova precisa de teste que recupere parâmetros conhecidos de dados simulados (`tests/test_estatistica.py`).
+Resultados são rotulados "calculado pelo sistema" e vêm com alertas de pressupostos.
 
 **Chave da API (`siap/segredos.py`, aba 🔑):** a usuária cola a chave; ela é testada (`models.retrieve`, sem custo),
 cifrada com Fernet + scrypt sobre `APP_PASSWORD` (ou `SIAP_CHAVE_MESTRA`) e guardada em `segredos_cifrados`.
@@ -67,7 +75,7 @@ Avaliação concluída/cancelada é somente leitura até ser reaberta.
   `siap/finalidades.py`; `siap/avaliacoes.py` — avaliações + filtro de identificadores (CPF/e-mail/telefone);
   `siap/documentos.py` — documentos e fluxo; `siap/exportar_docx.py` — geração do Word;
   `siap/ia.py` — consultor IA; `siap/segredos.py` — chave da API cifrada; `siap/qualitativo.py` — análise qualitativa;
-  `siap/paineis.py` — agregações dos painéis;
+  `siap/paineis.py` — agregações dos painéis; `siap/estatistica.py` + `siap/pesquisa.py` — estatística de pesquisa;
   `siap/inventario.py` — inventário inicial; `siap/db.py` — conexão + migrações; `siap/ui.py` — utilidades de tela
   (`executar` para ações de formulário).
 - `siap/migracoes/` — Alembic. Aplicadas automaticamente ao abrir o app.

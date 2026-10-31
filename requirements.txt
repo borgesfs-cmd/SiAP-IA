@@ -6,3 +6,6 @@ alembic>=1.13,<2
 python-docx>=1.1,<2
 anthropic>=2.3,<3
 cryptography>=42
+scipy>=1.11
+girth>=0.8,<1
+openpyxl>=3.1

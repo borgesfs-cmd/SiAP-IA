@@ -113,3 +113,7 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 ## 17. Chave da API e Painéis (31/10/2026)
 **Usuário:** pediu que a chave da API pudesse ser colada no próprio sistema, numa aba fácil e intuitiva, e seguir para a próxima fase.
 **Entrega:** aba 🔑 Chave da API (colar → testar → salvar cifrada; remover; nunca exibida inteira, fora do backup); Painéis (visão geral, avaliação individual, comparativo). Migração 0004.
+
+## 18. Estatística de pesquisa (31/10/2026)
+**Usuário:** "vamos à próxima fase".
+**Entrega:** página Pesquisa (importação anonimizada, descritivas, precisão, AFE, TRI) com rotinas validadas em dados simulados. O `factor_analyzer` mostrou-se incompatível com o scikit-learn atual, então a análise fatorial foi implementada diretamente. A AFC ficou adiada porque o `semopy` não compila de forma confiável. Migração 0005.

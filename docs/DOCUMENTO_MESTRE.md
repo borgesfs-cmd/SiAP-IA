@@ -1,7 +1,12 @@
-# SIAP-IA — Documento Mestre v1.5
+# SIAP-IA — Documento Mestre v1.6
 
-**Versão 1.5 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.6 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.6 (Pós-MVP C)
+- **Estatística de pesquisa:** importação de bases anonimizadas (CSV/XLSX; recusa colunas e valores identificadores), descritivas e frequências, precisão (alfa com IC de Feldt, alfa padronizado, ômega de McDonald, análise de itens), AFE (eixos principais; varimax/promax; KMO; Bartlett; análise paralela de Horn) e TRI (2PL e resposta graduada).
+- Validação: as rotinas recuperam parâmetros conhecidos de dados simulados (ômega teórico, estrutura de dois fatores, parâmetros 2PL).
+- **AFC adiada:** a biblioteca candidata não compila de forma confiável; será feita depois via R (lavaan) ou outra biblioteca validada.
 
 ## v1.5 (Pós-MVP B)
 - **Aba 🔑 Chave da API:** a chave do Claude é colada no próprio sistema, testada, guardada criptografada (derivada da senha do app) e nunca exibida inteira nem incluída no backup.
@@ -57,7 +62,7 @@ SIAP-IA: apoio ao trabalho de avaliação psicológica em psicodiagnóstico adul
 | 4. Documentos | Laudo, atestado, relatório, parecer e declaração; rascunho → revisado → aprovado → emitido; retificação; .docx; SHA-256 | ✅ concluída |
 | Pós-MVP A | Consultor IA metodológico e de redação; análise qualitativa (codificação, matrizes, evidências) | ✅ concluída |
 | Pós-MVP B | Dashboards | ✅ concluída |
-| Pós-MVP C | Estatística de pesquisa: descritivas, TCT, precisão, AFE/AFC, TRI, normas de estudos próprios | — |
+| Pós-MVP C | Estatística de pesquisa: descritivas, TCT, precisão, AFE, TRI (AFC adiada) | ✅ concluída |
 
 ## 5. Inventário inicial (candidatos, todos "não verificado")
 | Categoria | Instrumentos |
