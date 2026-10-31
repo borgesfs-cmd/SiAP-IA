@@ -2,7 +2,7 @@
 
 **Sistema Inteligente de Avaliação Psicológica** — uso pessoal e não comercial.
 
-Versão atual: **MVP + Consultor IA, Análise qualitativa, Painéis e Estatística de pesquisa**
+Versão atual: **MVP + Consultor IA, Análise qualitativa, Painéis e Estatística de pesquisa**, com interface redesenhada (modos claro e escuro, página inicial com primeiros passos, ajuda “Como usar” em cada página).
 - **Pesquisa (estatística):** bases anonimizadas (CSV/XLSX), descritivas, alfa e ômega, análise de itens, análise fatorial exploratória e TRI (2PL e resposta graduada). Inclui um conjunto de exemplo simulado.
 - **Painéis:** visão geral do trabalho, percentis transcritos por avaliação, linha do tempo e comparativo entre avaliações.
 - **🔑 Chave da API:** cole a chave do Claude no próprio app; ela é testada e guardada criptografada.

@@ -319,4 +319,5 @@ def exportar_backup(s: Session) -> dict:
                     linha[coluna] = valor
             linhas.append(linha)
         dados[tabela.name] = linhas
+    auditar(s, "exportar_backup", "sistema", None, tabelas=len(dados) - 3)
     return json.loads(json.dumps(dados, ensure_ascii=False, default=str))

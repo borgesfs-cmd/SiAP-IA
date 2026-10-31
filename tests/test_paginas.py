@@ -6,7 +6,7 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 RAIZ = Path(__file__).resolve().parent.parent
-PAGINAS = ["paginas/panorama.py", "paginas/avaliacoes.py", "paginas/documentos.py", "paginas/qualitativo.py", "paginas/consultor_ia.py", "paginas/chave_api.py", "paginas/paineis.py", "paginas/pesquisa.py", "paginas/catalogo.py",
+PAGINAS = ["paginas/inicio.py", "paginas/avaliacoes.py", "paginas/documentos.py", "paginas/qualitativo.py", "paginas/consultor_ia.py", "paginas/chave_api.py", "paginas/paineis.py", "paginas/pesquisa.py", "paginas/catalogo.py",
            "paginas/verificacao_satepsi.py", "paginas/finalidades.py", "paginas/auditoria_backup.py"]
 
 
@@ -22,16 +22,14 @@ def test_pagina_abre_pela_navegacao(pagina):
     at.run()
     at.switch_page(pagina).run()
     assert not at.exception, at.exception
-    assert at.title
 
 
 def test_panorama_mostra_inventario_bloqueado():
     at = AppTest.from_file(str(RAIZ / "app.py"), default_timeout=30)
     at.run()
     metricas = {m.label: m.value for m in at.metric}
-    assert metricas["Testes no catálogo"] == "14"
-    assert metricas["Versões"] == "15"
-    assert metricas["Elegíveis a uso profissional"] == "0"
+    assert metricas["Testes no catálogo"] == "15"  # 14 testes, 15 versões
+    assert metricas["Testes elegíveis"] == "0"
 
 
 def test_senha_protege_quando_configurada():

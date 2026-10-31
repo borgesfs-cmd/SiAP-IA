@@ -6,19 +6,17 @@ import streamlit as st
 from siap import avaliacoes as av
 from siap import catalogo, finalidades, satepsi
 from siap.models import Avaliacao
-from siap.ui import data_br, executar, iniciar_pagina, rodape, selo, transacao
+from siap import documentos as dc
+from siap.ui import data_br, estado_vazio, executar, iniciar_pagina, passos, rodape, selo, transacao
 
-iniciar_pagina("Avaliações")
-st.caption(
-    "Cada avaliação é identificada só por código (AV-AAAA-NNN). Não registre nome, CPF, contato ou "
-    "outros dados que identifiquem a pessoa: a correspondência código ↔ pessoa fica fora do sistema."
-)
-
+iniciar_pagina("Avaliações", "Cada caso é identificado só por código. Registre entrevistas, testes aplicados e resultados.", "🗂️", ["Clique em **Nova avaliação**, escolha a finalidade e a faixa etária.", "Clique numa linha da lista para abrir a avaliação.", "Siga as etapas: **dados → entrevistas → instrumentos → documento**.", "Só aparecem testes **liberados no SATEPSI** para a finalidade escolhida.", "Ao terminar, clique em **Concluir avaliação**."])
 with transacao() as s:
     finalidades_ativas = {f.id: f.nome for f in finalidades.listar_finalidades(s, somente_ativas=True)}
     todas_finalidades = {f.id: f.nome for f in finalidades.listar_finalidades(s)}
     lista = [(a.id, a.codigo, a.finalidade.nome, a.status, a.faixa_etaria, a.idade, a.data_inicio,
               a.data_conclusao) for a in av.listar_avaliacoes(s)]
+
+ICONE_STATUS = {av.EM_ANDAMENTO: "🟢", av.CONCLUIDA: "✔️", av.CANCELADA: "⛔"}
 
 
 def selecionar(avaliacao):
@@ -26,58 +24,77 @@ def selecionar(avaliacao):
 
 
 # ------------------------------------------------------------- nova avaliação
-with st.expander("➕ Nova avaliação", expanded=not lista):
+@st.dialog("Nova avaliação", width="large")
+def nova_avaliacao():
     if not finalidades_ativas:
         st.warning("Nenhuma finalidade ativa. Inclua ou reative uma em **Finalidades**.")
-    else:
-        with st.form("nova_avaliacao", clear_on_submit=True):
-            c1, c2, c3 = st.columns([2, 1, 1])
-            n_finalidade = c1.selectbox("Finalidade *", list(finalidades_ativas), format_func=finalidades_ativas.get)
-            n_faixa = c2.selectbox("Faixa etária *", av.FAIXAS_ETARIAS, index=2)
-            n_idade = c3.number_input("Idade (anos)", 0, 120, value=None, step=1)
-            c4, c5 = st.columns(2)
-            n_escolaridade = c4.selectbox("Escolaridade", av.ESCOLARIDADES)
-            n_inicio = c5.date_input("Início", value=catalogo.hoje(), max_value=catalogo.hoje(), format="DD/MM/YYYY")
-            n_contexto = st.text_input("Contexto / solicitante (sem identificar pessoas)",
-                                       placeholder="ex.: encaminhamento escolar; processo seletivo interno")
-            n_demanda = st.text_area("Demanda e objetivos da avaliação")
-            st.caption("Finalidade não encontrada? Inclua-a na página **Finalidades**.")
-            if st.form_submit_button("Criar avaliação"):
-                executar(
-                    lambda s: av.criar_avaliacao(
-                        s, finalidade_id=n_finalidade, faixa_etaria=n_faixa,
-                        idade=int(n_idade) if n_idade is not None else None, escolaridade=n_escolaridade,
-                        data_inicio=n_inicio, contexto=n_contexto, demanda=n_demanda,
-                    ),
-                    "Avaliação criada.", ao_concluir=selecionar,
-                )
+        return
+    st.caption("🔒 Não digite nome, CPF ou contato. O código (AV-AAAA-NNN) é gerado automaticamente.")
+    n_finalidade = st.pills("Finalidade *", list(finalidades_ativas), format_func=finalidades_ativas.get,
+                            selection_mode="single", default=list(finalidades_ativas)[0])
+    n_faixa = st.segmented_control("Faixa etária *", av.FAIXAS_ETARIAS, default="Adulto")
+    c1, c2, c3 = st.columns(3)
+    n_idade = c1.number_input("Idade (anos)", 0, 120, value=None, step=1)
+    n_escolaridade = c2.selectbox("Escolaridade", av.ESCOLARIDADES, format_func=lambda v: v or "Não informada")
+    n_inicio = c3.date_input("Início", value=catalogo.hoje(), max_value=catalogo.hoje(), format="DD/MM/YYYY")
+    n_contexto = st.text_input("Contexto / solicitante", placeholder="ex.: encaminhamento escolar; processo seletivo")
+    n_demanda = st.text_area("Demanda e objetivos da avaliação")
+    st.caption("Não encontrou a finalidade? Inclua-a na página **Finalidades**.")
+    if st.button("Criar avaliação", type="primary", icon=":material/add:", use_container_width=True):
+        if n_finalidade is None or n_faixa is None:
+            st.error("Escolha a finalidade e a faixa etária.")
+            return
+        executar(
+            lambda s: av.criar_avaliacao(
+                s, finalidade_id=n_finalidade, faixa_etaria=n_faixa,
+                idade=int(n_idade) if n_idade is not None else None, escolaridade=n_escolaridade,
+                data_inicio=n_inicio, contexto=n_contexto, demanda=n_demanda,
+            ),
+            "Avaliação criada.", ao_concluir=selecionar,
+        )
+
+
+if st.button("Nova avaliação", type="primary", icon=":material/add:"):
+    nova_avaliacao()
 
 if not lista:
+    estado_vazio("🗂️", "Nenhuma avaliação ainda", "Clique em **Nova avaliação** para abrir o primeiro caso.")
     rodape()
     st.stop()
 
 # ------------------------------------------------------------------ lista
-f1, f2 = st.columns(2)
-filtro_status = f1.selectbox("Situação", ["Todas", *av.STATUS.values()], index=1)
+f1, f2, f3 = st.columns([2, 1.2, 1])
+filtro_status = f1.segmented_control("Situação", ["Em andamento", "Concluída", "Cancelada", "Todas"],
+                                     default="Em andamento", key="filtro_status_av")
 filtro_fin = f2.selectbox("Finalidade", ["Todas", *todas_finalidades.values()])
+busca = f3.text_input("Buscar código", placeholder="AV-2026-…")
 filtradas = [
     a for a in lista
-    if (filtro_status == "Todas" or av.STATUS[a[3]] == filtro_status)
+    if (filtro_status in (None, "Todas") or av.STATUS[a[3]] == filtro_status)
     and (filtro_fin == "Todas" or a[2] == filtro_fin)
+    and (not busca.strip() or busca.strip().lower() in a[1].lower())
 ]
-st.dataframe(
-    pd.DataFrame([{
-        "Código": codigo, "Finalidade": fin, "Situação": av.STATUS[status], "Faixa etária": faixa,
-        "Idade": idade if idade is not None else "—", "Início": data_br(inicio), "Conclusão": data_br(fim),
-    } for _, codigo, fin, status, faixa, idade, inicio, fim in filtradas]),
-    hide_index=True, width="stretch",
-)
+if not filtradas:
+    st.info("Nenhuma avaliação com esses filtros.", icon=":material/filter_alt_off:")
+    rodape()
+    st.stop()
 
-rotulos = {a[0]: f"{a[1]} · {a[2]} · {av.STATUS[a[3]]}" for a in lista}
-ids = [a[0] for a in filtradas] or [a[0] for a in lista]
-atual = st.session_state.get("avaliacao_sel")
-avaliacao_id = st.selectbox("Abrir avaliação", ids, format_func=rotulos.get,
-                            index=ids.index(atual) if atual in ids else 0)
+st.caption("👆 Clique numa linha para abrir a avaliação.")
+evento = st.dataframe(
+    pd.DataFrame([{
+        "": ICONE_STATUS[status], "Código": codigo, "Finalidade": fin, "Situação": av.STATUS[status],
+        "Faixa etária": faixa, "Idade": idade if idade is not None else "—", "Início": data_br(inicio),
+        "Conclusão": data_br(fim),
+    } for _, codigo, fin, status, faixa, idade, inicio, fim in filtradas]),
+    hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row", key="tabela_avaliacoes",
+)
+linhas_sel = getattr(getattr(evento, "selection", None), "rows", []) or []
+ids = [a[0] for a in filtradas]
+if linhas_sel:
+    st.session_state["avaliacao_sel"] = ids[linhas_sel[0]]
+avaliacao_id = st.session_state.get("avaliacao_sel")
+if avaliacao_id not in ids:
+    avaliacao_id = ids[0]
 st.session_state["avaliacao_sel"] = avaliacao_id
 
 # ---------------------------------------------------------------- detalhe
@@ -99,32 +116,61 @@ with transacao() as s:
                              editado=r.editado_em is not None) for r in ap.resultados],
         ))
     opcoes = av.opcoes_de_versao(s, avaliacao_id)
+    n_documentos = len(dc.listar_documentos(s, avaliacao_id))
 
 em_andamento = dados["status"] == av.EM_ANDAMENTO
-st.divider()
-st.subheader(f"{dados['codigo']} — {dados['finalidade']}")
-st.markdown(
-    f"**Situação:** {av.STATUS[dados['status']]} · **Faixa etária:** {dados['faixa']}"
-    + (f" · **Idade:** {dados['idade']}" if dados["idade"] is not None else "")
-    + f" · **Início:** {data_br(dados['inicio'])}"
-    + (f" · **Conclusão:** {data_br(dados['conclusao'])}" if dados["conclusao"] else "")
-)
+tem_resultados = any(ap["resultados"] for ap in aplicacoes)
 
-b1, b2, b3, _ = st.columns([1, 1, 1, 3])
-if em_andamento:
-    if b1.button("Concluir avaliação"):
-        executar(lambda s: av.alterar_status(s, avaliacao_id, av.CONCLUIDA), "Avaliação concluída.")
-    if b2.button("Cancelar avaliação"):
-        executar(lambda s: av.alterar_status(s, avaliacao_id, av.CANCELADA), "Avaliação cancelada.")
-else:
-    st.info("Avaliação encerrada: os dados estão somente para leitura.")
-    if b1.button("Reabrir avaliação"):
-        executar(lambda s: av.alterar_status(s, avaliacao_id, av.EM_ANDAMENTO), "Avaliação reaberta.")
+idade_txt = f" · {dados['idade']} anos" if dados["idade"] is not None else ""
+with st.container(border=True):
+    cab, acoes = st.columns([3, 2], vertical_alignment="center")
+    cab.markdown(f"### {ICONE_STATUS[dados['status']]} {dados['codigo']}")
+    cab.markdown(
+        f":violet-badge[{dados['finalidade']}] :gray-badge[{av.STATUS[dados['status']]}] "
+        f":gray-badge[{dados['faixa']}{idade_txt}] "
+        f":gray-badge[Início {data_br(dados['inicio'])}]"
+        + (f" :gray-badge[Conclusão {data_br(dados['conclusao'])}]" if dados["conclusao"] else "")
+    )
+    with acoes:
+        b1, b2 = st.columns(2)
+        if em_andamento:
+            if b1.button("Concluir", icon=":material/task_alt:", type="primary", use_container_width=True):
+                executar(lambda s: av.alterar_status(s, avaliacao_id, av.CONCLUIDA), "Avaliação concluída.")
+            if b2.button("Cancelar", icon=":material/block:", use_container_width=True):
+                executar(lambda s: av.alterar_status(s, avaliacao_id, av.CANCELADA), "Avaliação cancelada.")
+        elif b1.button("Reabrir", icon=":material/lock_open:", use_container_width=True):
+            executar(lambda s: av.alterar_status(s, avaliacao_id, av.EM_ANDAMENTO), "Avaliação reaberta.")
+
+    etapa = ("Dados" if not dados["demanda"] else "Entrevistas" if not registros else
+             "Instrumentos" if not tem_resultados else "Documento" if not n_documentos else "")
+    passos([
+        ("1 · Dados e demanda", "ok" if dados["demanda"] else "atual" if etapa == "Dados" else ""),
+        (f"2 · Entrevistas ({len(registros)})", "ok" if registros else "atual" if etapa == "Entrevistas" else ""),
+        (f"3 · Instrumentos ({len(aplicacoes)})", "ok" if tem_resultados else "atual" if etapa == "Instrumentos" else ""),
+        (f"4 · Documento ({n_documentos})", "ok" if n_documentos else "atual" if etapa == "Documento" else ""),
+    ])
+    if not em_andamento:
+        st.info("Avaliação encerrada: os dados estão somente para leitura. Use **Reabrir** para alterar.",
+                icon=":material/lock:")
+    elif etapa == "Dados":
+        st.info("**Próximo passo:** descreva a demanda e os objetivos na aba *Dados da avaliação*.", icon=":material/lightbulb:")
+    elif etapa == "Entrevistas":
+        st.info("**Próximo passo:** registre a entrevista inicial ou a anamnese na aba *Entrevistas e observações*.",
+                icon=":material/lightbulb:")
+    elif etapa == "Instrumentos":
+        st.info("**Próximo passo:** registre os testes aplicados e transcreva os resultados na aba "
+                "*Instrumentos e resultados*.", icon=":material/lightbulb:")
+    elif etapa == "Documento":
+        st.info("**Próximo passo:** elabore o documento psicológico desta avaliação.", icon=":material/lightbulb:")
+        st.page_link("paginas/documentos.py", label="Ir para Documentos", icon=":material/arrow_forward:")
+    else:
+        st.success("Todas as etapas registradas. Quando terminar, clique em **Concluir**.", icon=":material/task_alt:")
 
 for ap in aplicacoes:
     if em_andamento and not ap["situacao_agora"].liberado:
-        st.warning(f"⚠️ **{ap['versao']}** deixou de estar elegível para esta finalidade: "
-                   f"{ap['situacao_agora'].motivo} Os dados registrados foram mantidos; requer análise profissional.")
+        st.warning(f"**{ap['versao']}** deixou de estar elegível para esta finalidade: "
+                   f"{ap['situacao_agora'].motivo} Os dados registrados foram mantidos; requer análise profissional.",
+                   icon=":material/warning:")
 
 aba_dados, aba_registros, aba_instrumentos = st.tabs(
     ["Dados da avaliação", f"Entrevistas e observações ({len(registros)})", f"Instrumentos e resultados ({len(aplicacoes)})"]
@@ -142,7 +188,7 @@ with aba_dados:
         c1, c2, c3 = st.columns(3)
         e_faixa = c1.selectbox("Faixa etária", av.FAIXAS_ETARIAS, index=av.FAIXAS_ETARIAS.index(dados["faixa"]))
         e_idade = c2.number_input("Idade (anos)", 0, 120, value=dados["idade"], step=1)
-        e_esc = c3.selectbox("Escolaridade", av.ESCOLARIDADES, index=av.ESCOLARIDADES.index(dados["escolaridade"]))
+        e_esc = c3.selectbox("Escolaridade", av.ESCOLARIDADES, index=av.ESCOLARIDADES.index(dados["escolaridade"]), format_func=lambda v: v or "Não informada")
         e_contexto = st.text_input("Contexto / solicitante", dados["contexto"])
         e_demanda = st.text_area("Demanda e objetivos", dados["demanda"], height=150)
         if st.form_submit_button("Salvar dados", disabled=not em_andamento):

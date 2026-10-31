@@ -1,7 +1,10 @@
-# SIAP-IA — Documento Mestre v1.6
+# SIAP-IA — Documento Mestre v1.7
 
-**Versão 1.6 · 31/10/2026 · Escopo: uso pessoal e não comercial**
+**Versão 1.7 · 31/10/2026 · Escopo: uso pessoal e não comercial**
 Substitui a v1.0 (Word). Consolida decisões e requisitos. Este documento não comprova a situação regulatória de nenhum instrumento e não substitui verificação normativa atualizada.
+
+## v1.7 (Interface)
+- Redesenho visual a pedido da usuária: tema próprio (claro e escuro), menu por áreas com ícones, página inicial com ações rápidas, primeiros passos, avisos e atividade recente; botão “Como usar” em todas as páginas; nova avaliação em janela com botões de escolha; etapas e próximo passo sugerido na avaliação; listas clicáveis; atalho do catálogo para a verificação SATEPSI; tipos de documento em cartões.
 
 ## v1.6 (Pós-MVP C)
 - **Estatística de pesquisa:** importação de bases anonimizadas (CSV/XLSX; recusa colunas e valores identificadores), descritivas e frequências, precisão (alfa com IC de Feldt, alfa padronizado, ômega de McDonald, análise de itens), AFE (eixos principais; varimax/promax; KMO; Bartlett; análise paralela de Horn) e TRI (2PL e resposta graduada).

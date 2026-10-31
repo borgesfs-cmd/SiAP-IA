@@ -6,11 +6,7 @@ import streamlit as st
 from siap import finalidades
 from siap.ui import executar, iniciar_pagina, rodape, transacao
 
-iniciar_pagina("Finalidades de avaliação")
-st.caption(
-    "As finalidades orientam a liberação dos testes: uma verificação SATEPSI pode valer para todas "
-    "ou apenas para algumas finalidades. Finalidades não são apagadas, apenas desativadas."
-)
+iniciar_pagina("Finalidades", "Os contextos de avaliação. Você pode incluir novas finalidades a qualquer momento.", "🎯", ["Veja as finalidades padrão na lista.", "Para incluir uma nova, abra **Incluir nova finalidade**.", "Finalidades não são apagadas: desative as que não usa."])
 
 with transacao() as s:
     lista = [(f.id, f.nome, f.descricao, f.ativa, f.padrao) for f in finalidades.listar_finalidades(s)]

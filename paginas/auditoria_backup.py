@@ -8,7 +8,7 @@ import streamlit as st
 from siap import catalogo
 from siap.ui import data_br, iniciar_pagina, rodape, transacao
 
-iniciar_pagina("Auditoria e backup")
+iniciar_pagina("Auditoria e backup", "Tudo o que muda no sistema fica registrado aqui. Faça cópias de segurança periódicas.", "🛡️", ["Clique em **Preparar backup** e depois em **Baixar backup**.", "Guarde o arquivo numa pasta protegida (no Mac: imagem de disco criptografada).", "Repita pelo menos uma vez por mês.", "Na trilha de auditoria, use a busca da tabela para encontrar uma ação."])
 
 st.subheader("Cópia de segurança")
 st.write(

@@ -4,10 +4,9 @@ import pandas as pd
 import streamlit as st
 
 from siap import catalogo
-from siap.ui import executar, iniciar_pagina, rodape, transacao
+from siap.ui import executar, iniciar_pagina, rodape, selo, transacao
 
-iniciar_pagina("Catálogo de testes")
-st.caption("Estar no catálogo não autoriza aplicação ou correção profissional: isso depende do SATEPSI.")
+iniciar_pagina("Catálogo de testes", "Sua biblioteca de instrumentos. Estar aqui não libera o uso: isso depende do SATEPSI.", "📚", ["Use a busca e os filtros para encontrar um teste.", "Clique numa linha para ver os detalhes e verificar no SATEPSI.", "Para incluir um teste novo, abra **Adicionar teste**.", "Cada versão (ex.: d2 e d2-R) é verificada separadamente."])
 
 with transacao() as s:
     linhas = catalogo.listar_catalogo(s)
@@ -15,10 +14,10 @@ with transacao() as s:
                     for i in catalogo.listar_instrumentos(s)]
 
 # ------------------------------------------------------------------ busca
-f1, f2, f3 = st.columns([2, 2, 1])
-busca = f1.text_input("Buscar por nome, sigla ou construto")
-categorias = f2.multiselect("Categoria", catalogo.CATEGORIAS, placeholder="Todas")
-uso = f3.selectbox("Uso profissional", ["Todos", "Elegível", "Bloqueado"])
+busca = st.text_input("Buscar", placeholder="🔎 Nome, sigla ou construto (ex.: atenção, d2, BPA)")
+f1, f2 = st.columns([3, 2])
+categorias = f1.pills("Categoria", catalogo.CATEGORIAS, selection_mode="multi")
+uso = f2.segmented_control("Uso profissional", ["Todos", "Elegível", "Bloqueado"], default="Todos") or "Todos"
 
 termo = busca.strip().lower()
 filtradas = [
@@ -27,15 +26,26 @@ filtradas = [
     and (not categorias or l.categoria in categorias)
     and (uso == "Todos" or l.situacao.rotulo_uso == uso)
 ]
-st.dataframe(
+st.caption(f"{len(filtradas)} de {len(linhas)} versões · 👆 clique numa linha para ver detalhes")
+evento = st.dataframe(
     pd.DataFrame([{
-        "Teste": l.instrumento, "Sigla": l.sigla, "Versão": l.versao, "Categoria": l.categoria,
-        "Construto": l.construto, "Editora": l.editora, "SATEPSI": l.situacao.rotulo,
+        "": "✅" if l.situacao.liberado else "⛔", "Teste": l.instrumento, "Versão": l.versao,
+        "Categoria": l.categoria, "Construto": l.construto, "SATEPSI": l.situacao.rotulo,
         "Uso profissional": l.situacao.rotulo_uso,
     } for l in filtradas]),
-    hide_index=True, width="stretch",
+    hide_index=True, width="stretch", on_select="rerun", selection_mode="single-row", key="tabela_catalogo",
 )
-st.caption(f"{len(filtradas)} de {len(linhas)} versões")
+sel = getattr(getattr(evento, "selection", None), "rows", []) or []
+if sel:
+    l = filtradas[sel[0]]
+    with st.container(border=True):
+        a, b = st.columns([3, 1], vertical_alignment="center")
+        a.markdown(f"#### {l.instrumento} — {l.versao}")
+        a.markdown(f"{selo(l.situacao)} :gray-badge[{l.categoria}]" + (f" :gray-badge[{l.construto}]" if l.construto else ""))
+        a.caption(l.situacao.motivo)
+        if b.button("Verificar no SATEPSI", icon=":material/verified:", type="primary", use_container_width=True):
+            st.session_state["satepsi_versao"] = l.versao_id
+            st.switch_page("paginas/verificacao_satepsi.py")
 
 
 # --------------------------------------------------------------- cadastro

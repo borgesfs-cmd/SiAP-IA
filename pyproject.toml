@@ -1,6 +1,6 @@
 [project]
 name = "siap-ia"
-version = "0.7.0"
+version = "0.8.0"
 description = "SIAP-IA — Sistema Inteligente de Avaliação Psicológica (uso pessoal, não comercial)"
 requires-python = ">=3.11"
 

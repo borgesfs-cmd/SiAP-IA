@@ -5,8 +5,7 @@ import streamlit as st
 from siap import ia, segredos
 from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
-iniciar_pagina("🔑 Chave da API do Claude")
-st.caption("Necessária apenas para o Consultor IA. O restante do sistema funciona sem ela.")
+iniciar_pagina("Chave da API", "Cole aqui a chave do Claude para usar o Consultor IA. Ela fica criptografada.", "🔑", ["Crie a chave em console.anthropic.com → **API keys**.", "Cole no campo abaixo e clique em **Testar e salvar**.", "Depois, ative o Consultor IA aceitando o termo."])
 
 with transacao() as s:
     est = segredos.estado(s, segredos.CHAVE_ANTHROPIC)

@@ -10,12 +10,7 @@ from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
 COR_1, COR_2 = "#2a78d6", "#eb6834"  # paleta de referência, slots 1 e 2
 
-iniciar_pagina("Pesquisa — estatística")
-st.caption(
-    "Para estudos com dados **anonimizados** (uma linha por participante, identificada só por código). "
-    "Todos os resultados são **calculados pelo sistema** com rotinas validadas em dados simulados; "
-    "os alertas indicam pressupostos e limites. Não use para normas ou correção de testes comerciais."
-)
+iniciar_pagina("Pesquisa (estatística)", "Análises psicométricas para estudos com dados anonimizados.", "📐", ["Importe um arquivo CSV/Excel (uma linha por participante, sem nomes) ou crie o **exemplo simulado**.", "Explore os dados em **Descritivas**.", "Em **Precisão**, selecione os itens de uma escala e calcule alfa e ômega.", "Em **AFE**, veja quantos fatores reter e as cargas.", "Em **TRI**, estime os parâmetros dos itens."])
 
 
 def baixar(df: pd.DataFrame, nome: str, chave: str):
@@ -82,7 +77,7 @@ with aba_dados:
         executar(lambda s: pq.remover(s, cid), "Conjunto removido.")
 
 with aba_desc:
-    cols = st.multiselect("Variáveis numéricas", numericas, default=numericas[:12], key=f"desc_{cid}")
+    cols = st.multiselect("Variáveis numéricas", numericas, default=numericas[:12], key=f"desc_{cid}", placeholder="Selecione…")
     if cols:
         tabela = es.descritivas(df, cols)
         st.dataframe(tabela.round(3), hide_index=True, width="stretch")
@@ -94,7 +89,7 @@ with aba_desc:
         st.dataframe(freq, hide_index=True, width="stretch")
 
 with aba_prec:
-    itens = st.multiselect("Itens da escala (mesma direção)", numericas, key=f"prec_{cid}")
+    itens = st.multiselect("Itens da escala (mesma direção)", numericas, key=f"prec_{cid}", placeholder="Selecione…")
     if st.button("Calcular precisão", disabled=len(itens) < 2, key=f"b_prec_{cid}"):
         try:
             st.session_state[f"res_prec_{cid}"] = es.precisao(df, itens)
@@ -113,10 +108,11 @@ with aba_prec:
         mostrar_alertas(r.alertas)
 
 with aba_afe:
-    itens_afe = st.multiselect("Itens", numericas, key=f"afe_{cid}")
+    itens_afe = st.multiselect("Itens", numericas, key=f"afe_{cid}", placeholder="Selecione…")
     c1, c2 = st.columns(2)
     nf = c1.number_input("Número de fatores (0 = sugerido pela análise paralela)", 0, 20, 0, key=f"nf_{cid}")
-    rot_afe = c2.selectbox("Rotação", list(es.ROTACOES), format_func=es.ROTACOES.get, key=f"rot_{cid}")
+    rot_afe = c2.segmented_control("Rotação", list(es.ROTACOES), format_func=es.ROTACOES.get, default="promax",
+                                   key=f"rot_{cid}") or "promax"
     if st.button("Rodar AFE", disabled=len(itens_afe) < 3, key=f"b_afe_{cid}"):
         try:
             with st.spinner("Calculando (inclui análise paralela)…"):
@@ -162,10 +158,10 @@ with aba_afe:
         mostrar_alertas(a.alertas)
 
 with aba_tri:
-    modelo = st.radio("Modelo", ["2PL", "GRM"], horizontal=True, key=f"mod_{cid}",
-                      format_func=lambda m: {"2PL": "2PL (itens dicotômicos 0/1)",
-                                             "GRM": "Resposta graduada (Likert)"}[m])
-    itens_tri = st.multiselect("Itens", numericas, key=f"tri_{cid}")
+    modelo = st.segmented_control("Modelo", ["2PL", "GRM"], default="2PL", key=f"mod_{cid}",
+                                  format_func=lambda m: {"2PL": "2PL (itens 0/1)",
+                                                         "GRM": "Resposta graduada (Likert)"}[m]) or "2PL"
+    itens_tri = st.multiselect("Itens", numericas, key=f"tri_{cid}", placeholder="Selecione…")
     if st.button("Estimar parâmetros", disabled=len(itens_tri) < 3, key=f"b_tri_{cid}"):
         try:
             with st.spinner("Estimando (máxima verossimilhança marginal)…"):

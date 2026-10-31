@@ -11,8 +11,7 @@ from siap.ui import data_br, iniciar_pagina, rodape, transacao
 COR = "#2a78d6"        # série única (paleta de referência, slot 1)
 COR_REF = "#8a8984"    # marca de referência neutra (legível no claro e no escuro)
 
-iniciar_pagina("Painéis")
-st.caption("Contagens e valores transcritos. Os gráficos não calculam escores nem normas.")
+iniciar_pagina("Painéis", "Seu trabalho em gráficos. Só contagens e valores que você registrou — nada é calculado a partir de normas.", "📊", ["**Visão geral**: números do consultório e situação SATEPSI.", "**Avaliação individual**: percentis registrados e linha do tempo do caso.", "**Comparativo**: a mesma medida entre avaliações.", "Em cada gráfico, **Ver dados em tabela** mostra os números."])
 
 
 MESES_PT = "['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][month(datum.value)]"

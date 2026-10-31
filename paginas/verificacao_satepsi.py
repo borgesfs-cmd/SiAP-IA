@@ -6,12 +6,8 @@ import streamlit as st
 from siap import catalogo, finalidades, satepsi
 from siap.ui import data_br, iniciar_pagina, rodape, selo, transacao
 
-iniciar_pagina("Verificação SATEPSI")
-st.markdown(
-    "1. Abra o [SATEPSI](https://satepsi.cfp.org.br/) e localize o teste **e a versão exata**.  \n"
-    "2. Salve uma captura de tela ou PDF da página do resultado.  \n"
-    "3. Registre abaixo a situação exatamente como aparece no site, anexando a evidência."
-)
+iniciar_pagina("Verificação SATEPSI", "Registre a consulta ao SATEPSI para liberar (ou bloquear) cada versão de teste.", "✅", ["Escolha o teste e a versão.", "Abra o site do SATEPSI e localize a versão exata.", "Salve uma captura de tela ou PDF do resultado.", "Registre a situação e anexe a evidência — favorável exige evidência.", "A liberação vale por 90 dias (ajustável)."])
+st.link_button("Abrir o site do SATEPSI", "https://satepsi.cfp.org.br/", icon=":material/open_in_new:")
 
 with transacao() as s:
     linhas = catalogo.listar_catalogo(s)
@@ -22,12 +18,14 @@ if not linhas:
     st.stop()
 
 rotulos = {l.versao_id: f"{l.instrumento} — {l.versao}" for l in linhas}
-pendentes = st.toggle("Mostrar apenas versões bloqueadas", value=False)
-ids = [l.versao_id for l in linhas if not (pendentes and l.situacao.liberado)]
+pre = st.session_state.pop("satepsi_versao", None)
+pendentes = st.toggle("Mostrar apenas versões bloqueadas", value=pre is None)
+ids = [l.versao_id for l in linhas if not (pendentes and l.situacao.liberado) or l.versao_id == pre]
 if not ids:
-    st.success("Nenhuma versão bloqueada.")
+    st.success("Nenhuma versão bloqueada. 🎉")
     st.stop()
-versao_id = st.selectbox("Versão do teste", ids, format_func=rotulos.get)
+versao_id = st.selectbox("Versão do teste", ids, format_func=rotulos.get,
+                         index=ids.index(pre) if pre in ids else 0)
 
 with transacao() as s:
     versao = s.get(catalogo.VersaoInstrumento, versao_id)

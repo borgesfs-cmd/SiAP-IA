@@ -8,7 +8,7 @@ from siap import ia
 from siap.exportar_docx import gerar_docx
 from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
-iniciar_pagina("Documentos psicológicos")
+iniciar_pagina("Documentos", "Laudos, atestados, relatórios, pareceres e declarações conforme a Resolução CFP 06/2019.", "📝", ["Preencha seus **dados profissionais** (uma vez).", "Escolha a avaliação e clique no tipo de documento para gerar o rascunho.", "Complete os trechos marcados com [[...]] e salve.", "Marque como **revisado**, **aprove** e **emita**.", "Para baixar o Word, digite o nome da pessoa no campo indicado — ele não é gravado."])
 
 st.info(
     "**Como o nome da pessoa avaliada é tratado**\n\n"
@@ -59,13 +59,18 @@ avaliacao_id = st.selectbox("Avaliação", ids_av, format_func=rot_av.get,
                             index=ids_av.index(atual_av) if atual_av in ids_av else 0)
 st.session_state["doc_avaliacao"] = avaliacao_id
 
-with st.expander("➕ Novo documento para esta avaliação"):
-    with st.form("novo_doc"):
-        tipo = st.selectbox("Tipo", list(dc.MODELOS), format_func=lambda t: dc.MODELOS[t].titulo)
-        st.caption(" · ".join(f"**{m.titulo}**: {m.descricao}" for m in dc.MODELOS.values()))
-        if st.form_submit_button("Gerar rascunho"):
-            executar(lambda s: dc.criar_documento(s, avaliacao_id, tipo), "Rascunho criado.",
-                     ao_concluir=lambda d: st.session_state.__setitem__("doc_sel", d.id))
+ICONES_DOC = {"laudo": "📋", "atestado": "🩺", "relatorio": "🗒️", "parecer": "⚖️", "declaracao": "✉️"}
+with st.expander("➕ Novo documento para esta avaliação", expanded=False):
+    st.caption("Clique no tipo para gerar o rascunho com os dados já registrados da avaliação.")
+    colunas_tipo = st.columns(len(dc.MODELOS))
+    for coluna, (chave_tipo, modelo) in zip(colunas_tipo, dc.MODELOS.items()):
+        with coluna, st.container(border=True, key=f"cartao_doc_{chave_tipo}"):
+            st.html(f'<div class="siap-cartao-ic">{ICONES_DOC[chave_tipo]}</div>'
+                    f'<div class="siap-cartao-tit">{modelo.titulo}</div>'
+                    f'<div class="siap-cartao-txt">{modelo.descricao}</div>')
+            if st.button("Gerar rascunho", key=f"gerar_{chave_tipo}", use_container_width=True):
+                executar(lambda s, t_=chave_tipo: dc.criar_documento(s, avaliacao_id, t_), "Rascunho criado.",
+                         ao_concluir=lambda d: st.session_state.__setitem__("doc_sel", d.id))
 
 with transacao() as s:
     docs = [(d.id, d.codigo, d.titulo, d.status, d.criado_em) for d in dc.listar_documentos(s, avaliacao_id)]

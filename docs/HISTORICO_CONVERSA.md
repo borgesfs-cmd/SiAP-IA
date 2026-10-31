@@ -117,3 +117,7 @@ Este arquivo organiza **todo o conteúdo substantivo disponível** em formato de
 ## 18. Estatística de pesquisa (31/10/2026)
 **Usuário:** "vamos à próxima fase".
 **Entrega:** página Pesquisa (importação anonimizada, descritivas, precisão, AFE, TRI) com rotinas validadas em dados simulados. O `factor_analyzer` mostrou-se incompatível com o scikit-learn atual, então a análise fatorial foi implementada diretamente. A AFC ficou adiada porque o `semopy` não compila de forma confiável. Migração 0005.
+
+## 19. Redesenho da interface (31/10/2026)
+**Usuário:** achou a interface pouco atrativa e pouco didática; pediu algo mais moderno, intuitivo e clicável.
+**Entrega:** tema próprio claro/escuro com fonte Inter; logotipo; menu agrupado por áreas; página Início (ações rápidas, primeiros passos com progresso, avisos, atividade recente); cabeçalho com “Como usar” em todas as páginas; janela de nova avaliação com botões de escolha; indicador de etapas e próximo passo; listas clicáveis; atalho Catálogo → SATEPSI; cartões de tipos de documento; textos de interface em português.

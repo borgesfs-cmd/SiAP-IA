@@ -8,11 +8,7 @@ from siap import ia
 from siap import qualitativo as q
 from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
-iniciar_pagina("Análise qualitativa")
-st.caption(
-    "Codifique trechos literais das entrevistas e observações, construa o livro de códigos e veja a matriz "
-    "código × registro. Sugestões da IA só entram na análise se você as aceitar."
-)
+iniciar_pagina("Análise qualitativa", "Codifique trechos de entrevistas e observações e veja os temas que emergem.", "🧩", ["Escolha a avaliação.", "Em **Codificar**, escolha o registro, cole o trecho e atribua um código.", "Opcional: peça **sugestões à IA** e aceite as que fizerem sentido.", "Em **Resultados**, veja a matriz e as evidências de cada código."])
 
 with transacao() as s:
     lista = [(a.id, f"{a.codigo} · {a.finalidade.nome} · {av.STATUS[a.status]}")

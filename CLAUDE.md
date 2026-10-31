@@ -93,6 +93,14 @@ Banco: `DATABASE_URL` (env ou secrets do Streamlit); sem ela, SQLite em `data/si
 
 ## Convenções
 - Interface, mensagens, nomes de domínio e documentação em **português**.
+- **Interface (padrão visual):** tema em `.streamlit/config.toml` (claro/escuro, fonte Inter, índigo `#5552d9`);
+  menu agrupado por áreas em `app.py` com ícones `:material/...:`; toda página começa com
+  `iniciar_pagina(titulo, descricao, icone, ajuda=[passos])` (cabeçalho + botão “Como usar”). Use os componentes de
+  `siap/ui.py`: `cartao_acao`, `estado_vazio`, `passos` (indicador de etapas), `rodape`. Prefira elementos clicáveis:
+  `st.pills`/`st.segmented_control` para poucas opções, `st.dialog` para criar registros, `st.dataframe(on_select=...)`
+  para abrir um item clicando na linha, `st.page_link`/`st.switch_page` para levar a próxima ação. Placeholders e
+  rótulos sempre em português. Página inicial: `paginas/inicio.py` + `siap/inicio.py` (primeiros passos, avisos,
+  atividade recente).
 - Regras de negócio em `siap/`, testadas sem Streamlit. Toda regra nova vem com teste.
 - Datas exibidas em dd/mm/aaaa, fuso `America/Sao_Paulo`.
 

@@ -7,7 +7,7 @@ from siap import documentos as dc
 from siap import ia
 from siap.ui import data_br, executar, iniciar_pagina, rodape, transacao
 
-iniciar_pagina("Consultor IA")
+iniciar_pagina("Consultor IA", "Sugestões de metodologia e redação. A IA sugere; quem decide é você.", "✨", ["Leia o termo e clique em **Ativar** (uma única vez).", "Escolha a avaliação e escreva sua pergunta.", "Confira **o que será enviado** — o texto é pseudonimizado.", "Avalie criticamente a resposta antes de usar."])
 
 with transacao() as s:
     perfil = dc.obter_perfil(s)
