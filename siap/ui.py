@@ -10,7 +10,7 @@ import streamlit as st
 
 from . import satepsi
 from .catalogo import FUSO, ErroValidacao
-from .db import criar_engine, database_url, fabrica_sessoes
+from .db import ConfiguracaoBancoInvalida, criar_engine, database_url, fabrica_sessoes
 from .finalidades import carregar_finalidades_padrao
 from .inventario import carregar_inventario_inicial
 
@@ -50,7 +50,12 @@ def _fabrica(url: str):
 @contextmanager
 def transacao():
     """Sessão com commit automático ao final (ou rollback em caso de erro)."""
-    with _fabrica(database_url()).begin() as s:
+    try:
+        fabrica = _fabrica(database_url())
+    except ConfiguracaoBancoInvalida as erro:
+        st.error(f"**Banco de dados não configurado corretamente.** {erro}")
+        st.stop()
+    with fabrica.begin() as s:
         yield s
 
 

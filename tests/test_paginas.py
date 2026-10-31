@@ -45,3 +45,11 @@ def test_senha_protege_quando_configurada():
     at.text_input[0].input("segredo")
     at.button[0].click().run()
     assert at.metric
+
+
+def test_url_invalida_mostra_erro_amigavel(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "postgresql://...copiado do Neon...?sslmode=require")
+    at = AppTest.from_file(str(RAIZ / "app.py"), default_timeout=30)
+    at.run()
+    assert not at.exception
+    assert "Banco de dados não configurado" in at.error[0].value

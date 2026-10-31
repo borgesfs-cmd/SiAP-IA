@@ -24,11 +24,12 @@ precisa ficar fora dele. Sem `DATABASE_URL`, o app usa SQLite e serve só para t
 1. Acesse <https://share.streamlit.io> e entre com a **conta GitHub** dona do repositório `siap-ia`.
    Autorize o acesso a repositórios privados quando for solicitado.
 2. **Create app** → opção de implantar a partir do GitHub.
-   - Repository: `borgesfs-cmd/siap-ia` · Branch: `main` · Main file: `app.py`
+   - Repository: `borgesfs-cmd/SiAP-IA` · Branch: `main` · Main file: `app.py`
    - App URL: escolha algo discreto.
 3. **Advanced settings**:
-   - Python: **3.12**
-   - Secrets: cole o texto abaixo, com os seus valores:
+   - Python: **3.12** ou mais recente (testado em 3.12 e 3.14)
+   - Secrets: cole o texto abaixo e **substitua todo o conteúdo entre aspas** pelos seus valores.
+     Em `DATABASE_URL` vai a connection string inteira copiada do Neon. O texto de exemplo não funciona.
      ```toml
      DATABASE_URL = "postgresql://...copiado do Neon...?sslmode=require"
      APP_PASSWORD = "uma frase longa só sua"
@@ -36,6 +37,10 @@ precisa ficar fora dele. Sem `DATABASE_URL`, o app usa SQLite e serve só para t
 4. **Deploy**. A primeira subida leva alguns minutos. O inventário inicial é carregado automaticamente.
 5. Depois de publicado: **Settings → Sharing** → deixe o app **privado** e convide só o seu e-mail.
    Ficam duas camadas de acesso: o login do Streamlit e a senha do app.
+
+## Se aparecer erro
+- **"Banco de dados não configurado corretamente"** (ou `UnicodeEncodeError … idna`): a `DATABASE_URL` está com o texto de exemplo, incompleta ou com espaços. No Streamlit, abra **Manage app → ⋮ → Settings → Secrets**, cole a connection string do Neon entre aspas e salve. O app reinicia sozinho.
+- **"Não foi possível conectar"**: confira se o projeto no Neon existe e se a string foi copiada inteira, incluindo `?sslmode=require`.
 
 ## 3. Uso no dia a dia
 - O app "dorme" após um período sem uso. Ao abrir, clique em *Wake up* e aguarde alguns segundos. Os dados estão no Neon e não se perdem.

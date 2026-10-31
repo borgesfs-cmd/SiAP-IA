@@ -9,7 +9,7 @@ from siap import avaliacoes, catalogo
 from siap.ui import data_br, iniciar_pagina, rodape, transacao
 
 iniciar_pagina("SIAP-IA — Panorama")
-st.caption("Sistema Inteligente de Avaliação Psicológica · Etapas 1 e 2: catálogo e Monitor SATEPSI")
+st.caption("Sistema Inteligente de Avaliação Psicológica · uso pessoal e não comercial")
 
 hoje = catalogo.hoje()
 with transacao() as s:

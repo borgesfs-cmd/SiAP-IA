@@ -179,3 +179,24 @@ def test_normalizar_url_postgres():
     assert normalizar_url("postgres://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
     assert normalizar_url("postgresql://u:p@h/db?sslmode=require").startswith("postgresql+psycopg://")
     assert normalizar_url("sqlite:///x.db") == "sqlite:///x.db"
+
+
+@pytest.mark.parametrize("url", [
+    "postgresql://...copiado do Neon...?sslmode=require",
+    "postgresql://usuario:senha@/neondb",
+    "postgresql://usuario:senha@ep-x..neon.tech/db",
+    "isto não é uma url",
+])
+def test_url_de_banco_invalida_gera_mensagem_clara(url):
+    from siap.db import ConfiguracaoBancoInvalida, normalizar_url
+
+    with pytest.raises(ConfiguracaoBancoInvalida, match="DATABASE_URL"):
+        criar_engine(normalizar_url(url))
+
+
+def test_banco_inacessivel_gera_mensagem_clara():
+    from siap.db import ConfiguracaoBancoInvalida
+
+    with pytest.raises(ConfiguracaoBancoInvalida, match="Não foi possível conectar") as erro:
+        criar_engine("postgresql+psycopg://u:Xq9zSenhaTeste@127.0.0.1:1/db?connect_timeout=2")
+    assert "Xq9zSenhaTeste" not in str(erro.value)
